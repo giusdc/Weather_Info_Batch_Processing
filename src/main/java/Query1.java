@@ -1,32 +1,16 @@
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
-import org.apache.parquet.schema.MessageTypeParser;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
-import org.jcp.xml.dsig.internal.dom.Utils;
+
 import scala.Tuple2;
 import utils.WeatherInfo;
 import utils.WeatherInfoParser;
 
-import java.awt.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.text.ParseException;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.regex.Pattern;
 
-import static org.htrace.Tracer.LOG;
+import java.util.Arrays;
 
 public class Query1 {
 
@@ -86,7 +70,7 @@ public class Query1 {
                 .mapToPair(p->new Tuple2<>(WeatherInfoParser.getKey(p._1()),1))
                 .reduceByKey((x,y)->x+y).filter(p->p._2()>=15);
 
-        weatherPair.saveAsTextFile("fufi");
+        weatherPair.saveAsTextFile("output");
 
 
 
