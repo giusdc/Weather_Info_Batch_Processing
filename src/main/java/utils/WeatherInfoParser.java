@@ -1,7 +1,14 @@
 package utils;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.StringTokenizer;
 
 public class WeatherInfoParser {
 
@@ -15,8 +22,19 @@ public class WeatherInfoParser {
         WeatherInfo weatherInfo=null;
 
 
+        StringTokenizer tokenizer = new StringTokenizer(line, ",");
+        ArrayList<String> arr=new ArrayList<>();
 
-        String[] csvValues = line.split(",");
+        while (tokenizer.hasMoreTokens()) {
+            arr.add(tokenizer.nextToken());
+
+        }
+
+
+
+
+
+        String[] csvValues = line.split(",",-1);
         for(int i=0;i<csvValues.length;i++){
             if(csvValues[i].equals("")){
                 csvValues[i]=null;
@@ -45,4 +63,32 @@ public class WeatherInfoParser {
 
         return weatherInfoArrayList;
     }
+
+
+    public static String getCityAndDay(WeatherInfo wi) throws ParseException {
+
+        LocalDate date=wi.getDate();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String formattedString = (String) date.format(formatter);
+        return wi.getCity()+"_"+formattedString;
+
+
+    }
+
+    public static int getDescription(WeatherInfo wi){
+        if(wi.getDescription().equals("sky is clear")){
+            return 1;
+        }
+        return 0;
+    }
+
+    public static String getKey(String value){
+        String[] stringValue = value.split("_");
+        String[] datetime=stringValue[1].split("-");
+        String key=stringValue[0]+"_"+datetime[0]+"-"+datetime[1];
+        return key;
+    }
+
+
 }

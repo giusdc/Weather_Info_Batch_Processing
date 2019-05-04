@@ -1,11 +1,14 @@
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
 import org.apache.parquet.schema.MessageTypeParser;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.jcp.xml.dsig.internal.dom.Utils;
+import scala.Tuple2;
 import utils.WeatherInfo;
 import utils.WeatherInfoParser;
 
@@ -67,13 +70,7 @@ public class Query1 {
 
         JavaRDD<String> weather_info= sc.textFile("data/weather_description.csv");
 
-        for(String line:weather_info.collect()){
-            i++;
-            if(i==2){
-                System.out.println("* "+line);
-                break;
-            }
-        }
+
 
 
         String header=weather_info.first();
@@ -83,9 +80,24 @@ public class Query1 {
                 flatMap(line->WeatherInfoParser.parseCsv(line,citiesList).iterator()).
                 filter(x-> x.getDate().getMonthValue()==3 || x.getDate().getMonthValue()==4 || x.getDate().getMonthValue()==5);
 
+        JavaPairRDD<String,Integer> weatherPair=weather_infoJavaRDD.mapToPair(w->new Tuple2<>(WeatherInfoParser.getCityAndDay(w),WeatherInfoParser.getDescription(w)))
+                .reduceByKey((k,z)->k+z)
+                .filter(f->f._2()>18)
+                .mapToPair(p->new Tuple2<>(WeatherInfoParser.getKey(p._1()),1))
+                .reduceByKey((x,y)->x+y).filter(p->p._2()>=15);
 
-        List<WeatherInfo> wi= weather_infoJavaRDD.take(15);
+        weatherPair.saveAsTextFile("fufi");
 
+
+
+
+
+
+
+
+       /* for(Tuple2<String,Integer> pippo:count.collect()){
+            System.out.println(pippo._1+" "+pippo._2);
+        }*/
 
 
         for(String line:weather_info.collect()){
