@@ -1,4 +1,6 @@
 
+import net.iakovlev.timeshape.TimeZoneEngine;
+import org.apache.spark.SerializableWritable;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -6,8 +8,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 import org.apache.spark.sql.sources.In;
 import scala.Tuple2;
-import utils.WeatherInfo;
-import utils.WeatherInfoParser;
+import utils.*;
 
 import java.text.ParseException;
 
@@ -17,8 +18,16 @@ import java.util.List;
 public class Query1 {
 
     private static String pathToFile = "data/weather_description.csv";
-    public static void main(String[] args) throws ParseException {
-        
+    public static void main(String[] args) throws Exception {
+
+
+        UTCUtils.sendGet(35.084492f,-106.651138f,"2012-10-01 13:00:00");
+
+        if(true){
+            System.out.println("CIAOOO");
+        }
+
+
         int i=0;
 
         SparkConf conf = new SparkConf()
@@ -26,32 +35,12 @@ public class Query1 {
                 .setAppName("Query1");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
+        String pathToCityFile = "data/city_attributes.csv";
 
-
-/*
-        SparkSession spark = SparkSession
-                .builder()
-                .appName("csv2parquet").config("spark.sql.warehouse.dir", "/file:/tmp")
-                .master("local")
-                .getOrCreate();
-
-        //JavaRDD<String> weatherFile = sc.textFile(pathToFile);
-
-        Dataset<Row> ds = spark.read().option("inferSchema", true).csv(pathToFile);
-
-        final String parquetFile = "test.parquet";
-        final String codec = "csv";
-
-        //ds.write().save(parquetFile);
-
-        //ds.write().format("com.databricks.spark.csv").save("pippo.csv");
-        //ds.write().save("output.prova");
-
-        //spark.stop();
-
-        ds.javaRDD().saveAsTextFile("data/pippo.parquet");
-
-        //Dataset<Row> pippo=spark.read().parquet(parquetFile);*/
+        JavaRDD<String> city_info= sc.textFile(pathToCityFile);
+        String header2=city_info.first();
+        JavaPairRDD<String, Float[]> cityInfoRDD=city_info.filter(y->!y.equals(header2)).mapToPair(c->new Tuple2<>(CityParser.parseCsv(c).getCity(),new Float[]{Float.parseFloat(CityParser.parseCsv(c).getLatitude()),Float.parseFloat(CityParser.parseCsv(c).getLongitude())}));
+        List<Float[]> values = cityInfoRDD.values().collect();
 
 
         JavaRDD<String> weather_info= sc.textFile("data/weather_description.csv");
@@ -62,18 +51,8 @@ public class Query1 {
         String header=weather_info.first();
         String[] citiesList = Arrays.copyOfRange(header.split(","), 1, header.split(",").length);
 
-        /*JavaRDD<WeatherInfo> weather_infoJavaRDD=weather_info.filter(y->!y.equals(header)).
-                flatMap(line->WeatherInfoParser.parseCsv(line,citiesList).iterator()).
-                filter(x-> x.getDate().getMonthValue()==3 || x.getDate().getMonthValue()==4 || x.getDate().getMonthValue()==5);
-
-       /* JavaPairRDD<String,Integer> weatherPair=weather_infoJavaRDD.mapToPair(w->new Tuple2<>(WeatherInfoParser.getCityAndDay(w),WeatherInfoParser.getDescription(w)))
-                .reduceByKey((k,z)->k+z)
-                .filter(f->f._2()>=18)
-                .mapToPair(p->new Tuple2<>(WeatherInfoParser.getKey(p._1()),1))
-                .reduceByKey((x,y)->x+y).filter(p->p._2()>=15);*/
-
         JavaPairRDD<String, Integer> weather_infoJavaRDD=weather_info.filter(y->!y.equals(header)).
-                flatMapToPair(line->WeatherInfoParser.parseCsv2(line,citiesList)).filter(x->x._1().split("-")[1].equals("03") || x._1().split("-")[1].equals("04") || x._1().split("-")[1].equals("05") )
+                flatMapToPair(line->WeatherInfoParser.parseCsv2(line,citiesList,values)).filter(x->x._1().split("-")[1].equals("03") || x._1().split("-")[1].equals("04") || x._1().split("-")[1].equals("05") )
 
         //JavaPairRDD<String,Integer> weatherPair=weather_infoJavaRDD.mapToPair(w->new Tuple2<>(WeatherInfoParser.getCityAndDay(w),WeatherInfoParser.getDescription(w)))
                 .reduceByKey((k,z)->k+z)
@@ -88,7 +67,7 @@ public class Query1 {
        // List<Tuple2<String, Integer>> pippo = weather_infoJavaRDD.take(10);
 
 
-        results.saveAsTextFile("output");
+        results.saveAsTextFile("output_query1");
       //  System.out.println("ciao");
 
 
@@ -103,13 +82,7 @@ public class Query1 {
         }*/
 
 
-        for(String line:weather_info.collect()){
-            i++;
-            if(i==2){
-                System.out.println("* "+line);
-                break;
-            }
-        }
+
 
 
 
