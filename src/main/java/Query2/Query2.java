@@ -40,50 +40,35 @@ public class Query2 {
         JavaRDD<String> tempInfo= sc.textFile(temperaturePath);
         String headerTemp=tempInfo.first();
         String[] citiesList = Arrays.copyOfRange(headerTemp.split(","), 1, headerTemp.split(",").length);
-
-       //List<String> pippo= cityInfoRDD.lookup("Portland");
-
-
+        JavaPairRDD<String,Float> tempInfoRDD=tempInfo.filter(y->!y.equals(headerTemp))
+                .flatMapToPair(line-> TempInfoParser.parseCsv(line,citiesList,hmapCities)).sortByKey().cache();
 
 
-        JavaPairRDD<String,Float> tempInfoRDD=tempInfo.filter(y->!y.equals(headerTemp)).
-                flatMapToPair(line-> TempInfoParser.parseCsv(line,citiesList,hmapCities));
+        JavaPairRDD<String,Avg> avgRDD = tempInfoRDD.aggregateByKey(new Avg(0,0),
+                (v,x) -> new Avg(v.getSum()+x,v.getNum()+1),
+                (v1,v2) -> new Avg(v1.getSum()+v2.getSum(),v1.getNum()+v2.getNum()));
 
-        //List<TempInfo> ti=tempInfoRDD.take(15);
+        JavaPairRDD<String,Double> AvgResult = avgRDD.mapToPair( p->new Tuple2<>(p._1(), p._2().getAvg())).sortByKey();
 
-        System.out.println("ciao");
+        Map<String,Double> m =  AvgResult.collectAsMap();
+        HashMap<String,Double> mapAVG = new HashMap<String,Double>(m);
 
+        JavaPairRDD<String,Double> pair= tempInfoRDD.mapToPair(l-> new Tuple2<>(l._1(),Math.pow(l._2()-mapAVG.get(l._1()),2)));
+        JavaPairRDD<String,Var> varRDD = pair.aggregateByKey(new Var(0,0),
 
+                (v,x) -> new Var(v.getValue()+x,v.getN()+1),
+                (v1,v2) -> new Var(v1.getValue()+v2.getValue(),v1.getN()+v2.getN()));
+        JavaPairRDD<String,Double> varResult = varRDD.mapToPair( p->new Tuple2<>(p._1(),  p._2().getVar())).sortByKey();
 
+        JavaPairRDD<String,Float> minRDD = tempInfoRDD.reduceByKey((a, b) -> Math.min(a,b)).sortByKey();
 
+        JavaPairRDD<String,Float> maxRDD = tempInfoRDD.reduceByKey((a, b) -> Math.max(a,b)).sortByKey();
 
-
-
-        tempInfoRDD.saveAsTextFile("output_query2");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        JavaPairRDD<String, Tuple2<Tuple2<Tuple2<Double, Double>, Float>, Float>> outputTemp = AvgResult.join(varResult).join(minRDD).join(maxRDD).sortByKey();
+        //JavaPairRDD<String, Float> outputTemp = AvgResult.union(varResult, minRDD, maxRDD);
+        outputTemp.saveAsTextFile("output_query2");
         sc.stop();
     }
-
-
-
-
-
-
 
 
 }

@@ -9,6 +9,10 @@ import java.util.List;
 
 public class TempInfoParser {
 
+    private static final float MIN_TEMP = 191.15f;
+    private static final float MAX_TEMP = 346.15f;
+
+
     public static Iterator<Tuple2<String, Float>> parseCsv(String line, String[] cities, HashMap<String,String> pairs) {
 
 
@@ -26,8 +30,13 @@ public class TempInfoParser {
         //Extract descriptions
         ArrayList<Float> values=new ArrayList<>();
         for(int i=1;i<(csvValues.length);i++){
-            if(csvValues[i]!=null)
-                values.add(Float.parseFloat(csvValues[i]));
+            if(csvValues[i]!=null){
+                if(Float.parseFloat(csvValues[i])< MIN_TEMP || Float.parseFloat(csvValues[i])> MAX_TEMP )
+                    values.add(null);
+                else
+                    values.add(Float.parseFloat(csvValues[i]));
+
+            }
             else
                 values.add(null);
         }
@@ -51,10 +60,10 @@ public class TempInfoParser {
                         csvValues[0],
                         values.get(i));*/
                 String[] datetime=csvValues[0].split("-");
-                String date=datetime[0]+"-"+datetime[1];
-                Tuple2<String,Float> result=new Tuple2<>(countries.get(i)+"_"+date,values.get(i));
+                String key=datetime[0]+"-"+datetime[1];
+                String country= (countries.get(i)).substring(1,countries.get(i).length()-1);
+                Tuple2<String,Float> result=new Tuple2<>(country +"_"+key,values.get(i));
                 results.add(result);
-
 
                 //tempInfoArrayList.add(tempInfo);
             }

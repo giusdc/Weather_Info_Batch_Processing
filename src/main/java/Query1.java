@@ -25,8 +25,6 @@ public class Query1 {
         //UTCUtils.sendGet(35.084492f,-106.651138f,"2012-10-01 13:00:00");
 
 
-
-
         int i=0;
 
         SparkConf conf = new SparkConf()
