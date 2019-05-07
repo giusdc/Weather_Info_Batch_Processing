@@ -32,16 +32,19 @@ public class Main {
         String header=city_info.first();
         JavaPairRDD<String, String> cityCountryMapRDD=city_info.filter(y->!y.equals(header)).mapToPair(c->new Tuple2<>(CityParser.parseCsv(c).getCity(),CountryMap.sendGet(c))).cache();
         JavaPairRDD<String, Float[]> cityCoordinateRDD=city_info.filter(y->!y.equals(header)).mapToPair(c->new Tuple2<>(CityParser.parseCsv(c).getCity(),new Float[]{Float.parseFloat(CityParser.parseCsv(c).getLatitude()),Float.parseFloat(CityParser.parseCsv(c).getLongitude())}));
+
         Map<String,String> map =  cityCountryMapRDD.collectAsMap();
         HashMap<String,String> hmapCities = new HashMap<String,String>(map);
         List<Float[]> values = cityCoordinateRDD.values().collect();
         List<String> cityList = cityCoordinateRDD.keys().collect();
         String[] citiesName = cityList.toArray(new String[cityList.size()]);
+
         //Get mapping pair zoneId/cities
         List<Tuple2<String, ZoneId>> mapping = UTCUtils.getZoneId(values, citiesName);
         JavaRDD rdd = sc.parallelize(mapping);
         JavaPairRDD<String,ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
         List<ZoneId> zoneIdList = mappingPair.values().collect();
+        //calling Query2
         Query2.getResponse(sc,pathList,zoneIdList,hmapCities);
 
 

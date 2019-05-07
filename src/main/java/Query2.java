@@ -59,18 +59,7 @@ public class Query2 {
         }
 
 
-
-
-
-
-
-
         sc.stop();
     }
-
-
-
-
-
 
 }
