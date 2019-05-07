@@ -2,6 +2,8 @@ package utils;
 
 import scala.Tuple2;
 
+import java.text.ParseException;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,12 +11,27 @@ import java.util.List;
 
 public class TempInfoParser {
 
-    private static final float MIN_TEMP = 191.15f;
-    private static final float MAX_TEMP = 346.15f;
+    private static  float MIN;
+    private static  float MAX;
 
 
-    public static Iterator<Tuple2<String, Float>> parseCsv(String line, String[] cities, HashMap<String,String> pairs) {
+    public static Iterator<Tuple2<String, Float>> parseCsv(String line, String[] cities, HashMap<String,String> pairs, List<ZoneId> zoneIds,int index) throws ParseException {
 
+        switch (index){
+            case 0:
+                MIN=191.15f;
+                MAX=346.15f;
+                break;
+            case 1:
+                MIN=955;
+                MAX=1065;
+                break;
+            case 2:
+                MIN=0;
+                MAX=100;
+                break;
+                default:break;
+        }
 
         ArrayList<TempInfo> tempInfoArrayList= new ArrayList<>();
         List<Tuple2<String,Float>> results=new ArrayList<>();
@@ -31,7 +48,7 @@ public class TempInfoParser {
         ArrayList<Float> values=new ArrayList<>();
         for(int i=1;i<(csvValues.length);i++){
             if(csvValues[i]!=null){
-                if(Float.parseFloat(csvValues[i])< MIN_TEMP || Float.parseFloat(csvValues[i])> MAX_TEMP )
+                if(Float.parseFloat(csvValues[i])< MIN || Float.parseFloat(csvValues[i])> MAX )
                     values.add(null);
                 else
                     values.add(Float.parseFloat(csvValues[i]));
@@ -59,7 +76,10 @@ public class TempInfoParser {
                         countries.get(i),
                         csvValues[0],
                         values.get(i));*/
-                String[] datetime=csvValues[0].split("-");
+                String newdate=UTCUtils.convert(zoneIds.get(i),csvValues[0]);
+                String[] datetime=newdate.split("-");
+
+
                 String key=datetime[0]+"-"+datetime[1];
                 String country= (countries.get(i)).substring(1,countries.get(i).length()-1);
                 Tuple2<String,Float> result=new Tuple2<>(country +"_"+key,values.get(i));

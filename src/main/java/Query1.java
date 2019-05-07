@@ -66,20 +66,6 @@ public class Query1 {
 
 
 
-
-
-
-
-
-       /* for(Tuple2<String,Integer> pippo:count.collect()){
-            System.out.println(pippo._1+" "+pippo._2);
-        }*/
-
-
-
-
-
-
         sc.stop();
     }
 
