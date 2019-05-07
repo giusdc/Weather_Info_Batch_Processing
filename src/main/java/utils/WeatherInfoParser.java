@@ -1,6 +1,7 @@
 package utils;
 
 import net.iakovlev.timeshape.TimeZoneEngine;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import scala.Tuple2;
 
@@ -8,6 +9,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -67,7 +69,8 @@ public class WeatherInfoParser {
 
 
 
-    public static Iterator<Tuple2<String, Integer>> parseCsv2(String line, String[] cities, List<Float[]> latlon) throws ParseException {
+    public static Iterator<Tuple2<String, Integer>> parseCsv2(String line, String[] cities, List<ZoneId> zoneIdList) throws ParseException {
+
 
 
         ArrayList<WeatherInfo> weatherInfoArrayList= new ArrayList<>();
@@ -104,7 +107,7 @@ public class WeatherInfoParser {
                         countries.get(i),
                         csvValues[0],
                         values.get(i));*/
-                String newdate=UTCUtils.convert(latlon.get(i)[0],latlon.get(i)[1],csvValues[0]);
+                String newdate=UTCUtils.convert(zoneIdList.get(i),csvValues[0]);
                 String[] datetime=newdate.split("-");
                 String date=datetime[0]+"-"+datetime[1]+"-"+datetime[2].split(" ")[0];
                 if(descriptions.get(i).equals("sky is clear"))
@@ -112,9 +115,6 @@ public class WeatherInfoParser {
                 else x=0;
                 Tuple2<String,Integer> result=new Tuple2<>(cities[i]+"_"+date,x);
                 results.add(result);
-
-
-                //tempInfoArrayList.add(tempInfo);
             }
         }
 

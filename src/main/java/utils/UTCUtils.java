@@ -2,6 +2,7 @@ package utils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.iakovlev.timeshape.TimeZoneEngine;
+import scala.Tuple2;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -14,29 +15,22 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.Optional;
-import java.util.TimeZone;
+import java.util.*;
 
 public class UTCUtils {
 
     static int count=0;
     static TimeZoneEngine engine=null;
 
-    public static String convert(float lat,float lon,String date)throws ParseException {
+    public static String convert(ZoneId zoneId,String date)throws ParseException {
 
 
-        if(count==0) {
-             engine= TimeZoneEngine.initialize();
-        }
-        Optional<ZoneId> maybeZoneId = engine.query(lat,lon);
-        TimeZone timeZone=TimeZone.getTimeZone(maybeZoneId.get());
+
         DateTimeFormatter formatter=DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime localDateTime=LocalDateTime.parse(date,formatter);
         ZonedDateTime convertZoneDateTime=ZonedDateTime.of(localDateTime,ZoneOffset.UTC.normalized());
-        ZonedDateTime newZoneDateTime = convertZoneDateTime.withZoneSameInstant(maybeZoneId.get());
+        ZonedDateTime newZoneDateTime = convertZoneDateTime.withZoneSameInstant(zoneId);
         String newDate = formatter.format(newZoneDateTime);
-        count++;
         return newDate;
 
     }
@@ -90,6 +84,24 @@ public class UTCUtils {
         System.out.println(response.toString());
         System.out.println(country);
         return country;
+
+    }
+
+
+    public static List<Tuple2<String, ZoneId>> getZoneId(List<Float[]> latlon, String[] cities)throws ParseException {
+
+
+        TimeZoneEngine engine= TimeZoneEngine.initialize();
+        List<Tuple2<String,ZoneId>> results=new ArrayList<>();
+        int i=0;
+        for(Float[] value:latlon) {
+            Optional<ZoneId> maybeZoneId = engine.query(value[0], value[1]);
+            ZoneId zoneId = maybeZoneId.get();
+            Tuple2<String,ZoneId> result=new Tuple2<>(cities[i],zoneId);
+            i++;
+            results.add(result);
+        }
+        return results;
 
     }
 
