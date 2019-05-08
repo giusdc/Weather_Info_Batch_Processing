@@ -24,8 +24,9 @@ public class Query2 {
             String[] citiesList = Arrays.copyOfRange(headerTemp.split(","), 1, headerTemp.split(",").length);
 
             JavaPairRDD<String,Float> tempInfoRDD=tempInfo.filter(y->!y.equals(headerTemp))
-                    .flatMapToPair(line-> FileInfoParser.parseCsv(line,citiesList,hmapCities,zoneIdList,index)).sortByKey().cache();
+                    .flatMapToPair(line-> FileInfoParser.parseCsv(line,citiesList,hmapCities,zoneIdList,index,false)).sortByKey().cache();
 
+            //tempInfoRDD.saveAsTextFile("ciao");
 
             JavaPairRDD<String, Stats> avgRDD = tempInfoRDD.aggregateByKey((new Stats(0,0,0,Double.POSITIVE_INFINITY,Double.NEGATIVE_INFINITY)),
                     (v,x) -> new Stats(v.getSum()+x,v.getNum()+1,v.getSumSquare()+Math.pow(x,2),v.computeMin(x),v.computeMax(x)),

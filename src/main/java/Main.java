@@ -45,10 +45,8 @@ public class Main {
         JavaPairRDD<String,ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
         List<ZoneId> zoneIdList = mappingPair.values().collect();
         //calling Query2
-        Query2.getResponse(sc,pathList,zoneIdList,hmapCities);
-
-
-
+        //Query2.getResponse(sc,pathList,zoneIdList,hmapCities);
+        Query3.getResponse(sc,pathList[0],zoneIdList,hmapCities);
 
     }
 }
