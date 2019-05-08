@@ -76,6 +76,14 @@ public class Stats implements Serializable {
         return result;
     }
 
+    public ArrayList<String> addElement(String diff) {
+        if (this.rank == null) {
+            this.rank = new ArrayList<>();
+        }
+        this.rank.add(diff);
+        return this.rank;
+    }
+
     public double getSumSquare() {
         return sumSquare;
     }
@@ -112,14 +120,6 @@ public class Stats implements Serializable {
 
     public int getNum() {
         return this.num;
-    }
-
-    public ArrayList<String> addElement(String diff) {
-        if (this.rank == null) {
-            this.rank = new ArrayList<>();
-        }
-        this.rank.add(diff);
-        return this.rank;
     }
 
     public ArrayList<String> getRank() {

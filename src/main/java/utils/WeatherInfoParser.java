@@ -71,8 +71,6 @@ public class WeatherInfoParser {
 
     public static Iterator<Tuple2<String, Integer>> parseCsv2(String line, String[] cities, List<ZoneId> zoneIdList) throws ParseException {
 
-
-
         ArrayList<WeatherInfo> weatherInfoArrayList= new ArrayList<>();
         List<Tuple2<String,Integer>> results=new ArrayList<>();
         WeatherInfo weatherInfo=null;
@@ -83,7 +81,6 @@ public class WeatherInfoParser {
             }
         }
 
-
         //Extract descriptions
         ArrayList<String> descriptions=new ArrayList<>();
         for(int i=1;i<(csvValues.length);i++){
@@ -93,13 +90,7 @@ public class WeatherInfoParser {
                 descriptions.add(null);
         }
 
-
-
-
-
-
         //Create object
-
         int x=0;
         for(int i=0;i<cities.length;i++){
             if(descriptions.get(i)!=null){
@@ -113,7 +104,6 @@ public class WeatherInfoParser {
                 results.add(result);
             }
         }
-
         return results.iterator();
     }
 
@@ -125,8 +115,6 @@ public class WeatherInfoParser {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String formattedString = (String) date.format(formatter);
         return wi.getCity()+"_"+formattedString;
-
-
     }
 
     public static int getDescription(WeatherInfo wi){

@@ -67,10 +67,6 @@ public class FileInfoParser {
         //Create object
         for(int i=0;i<cities.length;i++){
             if(values.get(i)!=null){
-                /*fileInfo=new FileInfo(
-                        countries.get(i),
-                        csvValues[0],
-                        values.get(i));*/
                 String newdate=UTCUtils.convert(zoneIds.get(i),csvValues[0]);
                 String[] datetime=newdate.split("-");
                 String key,country;

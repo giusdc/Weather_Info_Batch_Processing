@@ -17,6 +17,7 @@ import java.util.Map;
 public class Main {
 
     private static String pathToCityFile = "data/city_attributes.csv";
+    private static String pathWeather = "data/weather_description.csv";
     private static String[] pathList={"data/temperature.csv","data/pressure.csv","data/humidity.csv"};
 
 
@@ -24,7 +25,7 @@ public class Main {
 
         SparkConf conf = new SparkConf()
                 .setMaster("local")
-                .setAppName("Query2");
+                .setAppName("Query");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         //Get mapping city->country
@@ -45,11 +46,12 @@ public class Main {
         JavaPairRDD<String,ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
         List<ZoneId> zoneIdList = mappingPair.values().collect();
 
-        int query=2;
+        int query=1;
 
         switch (query) {
             case 1:
                 /*  Process Query 1 */
+                Query1.getResponse(sc,pathWeather,zoneIdList,hmapCities/*useless*/);
                 break;
 
             case 2:
