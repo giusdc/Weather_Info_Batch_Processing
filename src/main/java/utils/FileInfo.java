@@ -2,13 +2,13 @@ package utils;
 
 import java.io.Serializable;
 
-public class TempInfo implements Serializable {
+public class FileInfo implements Serializable {
 
     private String country;
     private String date;
     private float value;
 
-    public TempInfo(String country, String date, float value) {
+    public FileInfo(String country, String date, float value) {
         this.country = country;
         this.date = date;
         this.value = value;

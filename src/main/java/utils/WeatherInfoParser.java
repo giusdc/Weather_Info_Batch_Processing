@@ -103,7 +103,7 @@ public class WeatherInfoParser {
         int x=0;
         for(int i=0;i<cities.length;i++){
             if(descriptions.get(i)!=null){
-                /*tempInfo=new TempInfo(
+                /*tempInfo=new FileInfo(
                         countries.get(i),
                         csvValues[0],
                         values.get(i));*/

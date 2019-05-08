@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-public class TempInfoParser {
+public class FileInfoParser {
 
     private static  float MIN;
     private static  float MAX;
@@ -33,16 +33,15 @@ public class TempInfoParser {
                 default:break;
         }
 
-        ArrayList<TempInfo> tempInfoArrayList= new ArrayList<>();
+        ArrayList<FileInfo> fileInfoArrayList = new ArrayList<>();
         List<Tuple2<String,Float>> results=new ArrayList<>();
-        TempInfo tempInfo=null;
+        FileInfo fileInfo =null;
         String[] csvValues = line.split(",",-1);
         for(int i=0;i<csvValues.length;i++){
             if(csvValues[i].equals("")){
                 csvValues[i]=null;
             }
         }
-
 
         //Extract descriptions
         ArrayList<Float> values=new ArrayList<>();
@@ -65,14 +64,10 @@ public class TempInfoParser {
             countries.add(pairs.get(cities[i]));
         }
 
-
-
-
         //Create object
-
         for(int i=0;i<cities.length;i++){
             if(values.get(i)!=null){
-                /*tempInfo=new TempInfo(
+                /*fileInfo=new FileInfo(
                         countries.get(i),
                         csvValues[0],
                         values.get(i));*/
@@ -85,7 +80,7 @@ public class TempInfoParser {
                 Tuple2<String,Float> result=new Tuple2<>(country +"_"+key,values.get(i));
                 results.add(result);
 
-                //tempInfoArrayList.add(tempInfo);
+                //fileInfoArrayList.add(fileInfo);
             }
         }
 
