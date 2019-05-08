@@ -44,9 +44,27 @@ public class Main {
         JavaRDD rdd = sc.parallelize(mapping);
         JavaPairRDD<String,ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
         List<ZoneId> zoneIdList = mappingPair.values().collect();
-        //calling Query2
-        //Query2.getResponse(sc,pathList,zoneIdList,hmapCities);
-        Query3.getResponse(sc,pathList[0],zoneIdList,hmapCities);
+
+        int query=2;
+
+        switch (query) {
+            case 1:
+                /*  Process Query 1 */
+                break;
+
+            case 2:
+                /*  Process Query 2 */
+                Query2.getResponse(sc,pathList,zoneIdList,hmapCities);
+                break;
+
+            case 3:
+                /*  Process Query 3 */
+                Query3.getResponse(sc,pathList[0],zoneIdList,hmapCities);
+                break;
+            default:
+                break;
+
+        }
 
     }
 }
