@@ -30,7 +30,7 @@ public class CountryMap {
         //String url2 = "https://nominatim.openstreetmap.org/search.php?q=brandenburger+tor%2C+berlin%2C+deutschland&amp;format=json";
 
 
-        City city= CityParser.parseCsv(line);
+        CityInfo city= CityParser.parseCsv(line);
 
 
         String url="https://nominatim.openstreetmap.org/reverse?format=json&lat="+city.getLatitude()+"&lon="+city.getLongitude()+"&accept-language=en";

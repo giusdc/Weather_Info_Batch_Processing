@@ -1,16 +1,23 @@
 package utils;
 
+import com.esotericsoftware.kryo.Kryo;
+
 import java.io.Serializable;
 
-public class City implements Serializable {
+public class CityInfo implements Serializable {
+
     private String city;
     private String latitude;
     private String longitude;
 
-    public City(String city, String latitude, String longitude) {
+
+
+
+    public CityInfo(String city, String latitude, String longitude) {
         this.city = city;
         this.latitude = latitude;
         this.longitude = longitude;
+
     }
 
     public String getCity() {

@@ -2,6 +2,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+
 import scala.Tuple2;
 import utils.CityParser;
 import utils.CountryMap;
@@ -22,6 +23,13 @@ public class Main {
 
 
     public static void main(String[] args) throws ParseException {
+
+        double lat = 45.436636;
+        double lng = 12.326413;
+
+// Find a single city
+
+
 
         SparkConf conf = new SparkConf()
                 .setMaster("local")
