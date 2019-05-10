@@ -39,7 +39,7 @@ public class Query1 {
         JavaPairRDD<String, Iterable<String>> results= weather_infoJavaRDD.mapToPair(p-> new Tuple2<>(p._1().split("_")[1],p._1().split("_")[0])).groupByKey();
 
         results.saveAsTextFile("output_query1");
-        sc.stop();
+
 
     }
 }

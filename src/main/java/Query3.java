@@ -41,6 +41,6 @@ public class Query3 {
 
         //diffAvg.saveAsTextFile("ciao");
         output.saveAsTextFile("output_query3");
-        sc.stop();
+
     }
 }

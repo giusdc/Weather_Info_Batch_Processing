@@ -114,7 +114,9 @@ public class UTCUtils {
 
     }
     public static void main(String args[]) throws IOException {
-        String hdfsuri = "hdfs://52.47.200.213:8020";
+
+        System.out.println("pippo");
+        String hdfsuri = "hdfs://35.180.172.56:8020";
 
         String path="/user/hdfs/example/hdfs/";
         String fileName="hello.csv";
@@ -126,15 +128,15 @@ public class UTCUtils {
         //conf.set("fs.default.name", conf.get("fs.defaultFS"));
         //conf.set("dfs.nameservices","yourclustername");
         //conf.set("dfs.ha.namenodes.yourclustername", "nn1,nn2");
-        conf.set("dfs.namenode.rpc-address","52.47.200.213:8020");
+
 
         //conf.set("dfs.client.failover.proxy.provider.yourclustername","org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
 
         // Set FileSystem URI
         //conf.set("fs.defaultFS", hdfsuri);
         // Because of Maven
-       // conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-        //conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+        conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
         //conf.set("dfs.client.use.datanode.hostname", "true");
         //conf.set("dfs.datanode.address","52.47.161.215:50010");
         //conf.addResource("hdfs-site.xml");
@@ -156,7 +158,7 @@ public class UTCUtils {
             System.out.println("Path "+path+" created.");
         }
 
-        /*
+
         //==== Write file
         System.out.println("Begin Write file into hdfs");
         //Create a path
@@ -166,8 +168,8 @@ public class UTCUtils {
         //Cassical output stream usage
         outputStream.writeBytes(fileContent);
         outputStream.close();
-        System.out.println("End Write file into hdfs");*/
-
+        System.out.println("End Write file into hdfs");
+/*
         Path hdfsreadpath = new Path("/user/hdfs/fufi.txt");
         //Init input stream
         FSDataInputStream inputStream = fs.open(hdfsreadpath);
@@ -175,7 +177,7 @@ public class UTCUtils {
         String out= IOUtils.toString(inputStream, "UTF-8");
         System.out.println(out);
         inputStream.close();
-        fs.close();
+        fs.close();*/
 
     }
 

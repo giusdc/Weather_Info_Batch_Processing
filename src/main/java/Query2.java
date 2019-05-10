@@ -35,7 +35,7 @@ public class Query2 {
             JavaPairRDD<String,String> AvgResult = avgRDD.mapToPair( p->new Tuple2<>(p._1(), p._2().getValues())).sortByKey();
             AvgResult.saveAsTextFile("output_query2/"+pathList[i]);
         }
-        sc.stop();
+
     }
 
 }

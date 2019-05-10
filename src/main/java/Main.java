@@ -24,17 +24,12 @@ public class Main {
 
     public static void main(String[] args) throws ParseException {
 
-        double lat = 45.436636;
-        double lng = 12.326413;
-
-// Find a single city
-
-
-
+        long startTime = System.currentTimeMillis();
         SparkConf conf = new SparkConf()
                 .setMaster("local")
                 .setAppName("Query");
         JavaSparkContext sc = new JavaSparkContext(conf);
+        sc.setLogLevel("ERROR");
 
         //Get mapping city->country
         JavaRDD<String> city_info= sc.textFile(pathToCityFile);
@@ -54,7 +49,7 @@ public class Main {
         JavaPairRDD<String,ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
         List<ZoneId> zoneIdList = mappingPair.values().collect();
 
-        int query=1;
+        int query=Integer.parseInt(args[0]);
 
         switch (query) {
             case 1:
@@ -71,10 +66,19 @@ public class Main {
                 /*  Process Query 3 */
                 Query3.getResponse(sc,pathList[0],zoneIdList,hmapCities);
                 break;
+            case 4:
+                Query1.getResponse(sc,pathWeather,zoneIdList,hmapCities);
+                Query2.getResponse(sc,pathList,zoneIdList,hmapCities);
+                Query3.getResponse(sc,pathList[0],zoneIdList,hmapCities);
             default:
                 break;
 
         }
+        sc.stop();
+        long endTime = System.currentTimeMillis();
+        long timeElapsed = endTime - startTime;
+        System.out.println("Execution time in seconds: " + timeElapsed/1000);
+
 
     }
 }
