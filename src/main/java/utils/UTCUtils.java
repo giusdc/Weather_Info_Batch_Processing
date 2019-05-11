@@ -3,12 +3,14 @@ package utils;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.iakovlev.timeshape.TimeZoneEngine;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
 import scala.Tuple2;
 
 import java.io.BufferedReader;
@@ -113,6 +115,7 @@ public class UTCUtils {
         return results;
 
     }
+
     public static void main(String args[]) throws IOException {
 
         System.out.println("pippo");
@@ -180,8 +183,6 @@ public class UTCUtils {
         fs.close();*/
 
     }
-
-
 
 
 }

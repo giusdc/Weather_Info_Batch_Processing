@@ -6,6 +6,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 import utils.CityParser;
 import utils.CountryMap;
+import utils.CsvToAvroConverter;
 import utils.UTCUtils;
 
 import java.text.ParseException;
@@ -19,66 +20,74 @@ public class Main {
 
     private static String pathToCityFile = "data/city_attributes.csv";
     private static String pathWeather = "data/weather_description.csv";
-    private static String[] pathList={"data/temperature.csv","data/pressure.csv","data/humidity.csv"};
+    private static String[] pathList={"data/temperature.csv","data/pressure.csv","data/humidity.csv","data/city_attributes.csv"};
 
+    private static String pathAvro="avro/cityAttributes.avro";
 
-    public static void main(String[] args) throws ParseException {
+    public static void main(String[] args) throws Exception {
 
-        long startTime = System.currentTimeMillis();
-        SparkConf conf = new SparkConf()
-                .setMaster("local")
-                .setAppName("Query");
-        JavaSparkContext sc = new JavaSparkContext(conf);
-        sc.setLogLevel("ERROR");
+        //CsvToAvroConverter.converter(pathList, pathToCityFile);
+        //only for windows
+        System.setProperty("hadoop.home.dir", "C:\\winutils");
 
-        //Get mapping city->country
-        JavaRDD<String> city_info= sc.textFile(pathToCityFile);
-        String header=city_info.first();
-        JavaPairRDD<String, String> cityCountryMapRDD=city_info.filter(y->!y.equals(header)).mapToPair(c->new Tuple2<>(CityParser.parseCsv(c).getCity(),CountryMap.sendGet(c))).cache();
-        JavaPairRDD<String, Float[]> cityCoordinateRDD=city_info.filter(y->!y.equals(header)).mapToPair(c->new Tuple2<>(CityParser.parseCsv(c).getCity(),new Float[]{Float.parseFloat(CityParser.parseCsv(c).getLatitude()),Float.parseFloat(CityParser.parseCsv(c).getLongitude())}));
+        if (true) {
+            long startTime = System.currentTimeMillis();
+            SparkConf conf = new SparkConf()
+                    .setMaster("local")
+                    .setAppName("Query");
+            JavaSparkContext sc = new JavaSparkContext(conf);
+            sc.setLogLevel("ERROR");
 
-        Map<String,String> map =  cityCountryMapRDD.collectAsMap();
-        HashMap<String,String> hmapCities = new HashMap<String,String>(map);
-        List<Float[]> values = cityCoordinateRDD.values().collect();
-        List<String> cityList = cityCoordinateRDD.keys().collect();
-        String[] citiesName = cityList.toArray(new String[cityList.size()]);
+            //Get mapping city->country
+            JavaRDD<String> city_info = sc.textFile(pathAvro);
+            //city_info.saveAsTextFile("prova");
+            String header = city_info.first();
+            JavaPairRDD<String, String> cityCountryMapRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), CountryMap.sendGet(c))).cache();
+            JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), new Float[]{Float.parseFloat(CityParser.parseCsv(c).getLatitude()), Float.parseFloat(CityParser.parseCsv(c).getLongitude())}));
 
-        //Get mapping pair zoneId/cities
-        List<Tuple2<String, ZoneId>> mapping = UTCUtils.getZoneId(values, citiesName);
-        JavaRDD rdd = sc.parallelize(mapping);
-        JavaPairRDD<String,ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
-        List<ZoneId> zoneIdList = mappingPair.values().collect();
+            Map<String, String> map = cityCountryMapRDD.collectAsMap();
+            HashMap<String, String> hmapCities = new HashMap<String, String>(map);
+            List<Float[]> values = cityCoordinateRDD.values().collect();
+            List<String> cityList = cityCoordinateRDD.keys().collect();
+            String[] citiesName = cityList.toArray(new String[cityList.size()]);
 
-        int query=Integer.parseInt(args[0]);
+            //Get mapping pair zoneId/cities
+            List<Tuple2<String, ZoneId>> mapping = UTCUtils.getZoneId(values, citiesName);
+            JavaRDD rdd = sc.parallelize(mapping);
+            JavaPairRDD<String, ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
+            List<ZoneId> zoneIdList = mappingPair.values().collect();
 
-        switch (query) {
-            case 1:
-                /*  Process Query 1 */
-                Query1.getResponse(sc,pathWeather,zoneIdList,hmapCities/*useless*/);
-                break;
+            int query = Integer.parseInt(args[0]);
 
-            case 2:
-                /*  Process Query 2 */
-                Query2.getResponse(sc,pathList,zoneIdList,hmapCities);
-                break;
+            switch (query) {
+                case 1:
+                    /*  Process Query 1 */
+                    Query1.getResponse(sc, pathList[3], zoneIdList, hmapCities/*useless*/);
+                    break;
 
-            case 3:
-                /*  Process Query 3 */
-                Query3.getResponse(sc,pathList[0],zoneIdList,hmapCities);
-                break;
-            case 4:
-                Query1.getResponse(sc,pathWeather,zoneIdList,hmapCities);
-                Query2.getResponse(sc,pathList,zoneIdList,hmapCities);
-                Query3.getResponse(sc,pathList[0],zoneIdList,hmapCities);
-            default:
-                break;
+                case 2:
+                    /*  Process Query 2 */
+                    Query2.getResponse(sc, pathList, zoneIdList, hmapCities);
+                    break;
+
+                case 3:
+                    /*  Process Query 3 */
+                    Query3.getResponse(sc, pathList[0], zoneIdList, hmapCities);
+                    break;
+                case 4:
+                    Query1.getResponse(sc, pathList[3], zoneIdList, hmapCities);
+                    Query2.getResponse(sc, pathList, zoneIdList, hmapCities);
+                    Query3.getResponse(sc, pathList[0], zoneIdList, hmapCities);
+                default:
+                    break;
+
+            }
+            sc.stop();
+            long endTime = System.currentTimeMillis();
+            long timeElapsed = endTime - startTime;
+            System.out.println("Execution time in seconds: " + timeElapsed / 1000);
+
 
         }
-        sc.stop();
-        long endTime = System.currentTimeMillis();
-        long timeElapsed = endTime - startTime;
-        System.out.println("Execution time in seconds: " + timeElapsed/1000);
-
-
     }
 }
