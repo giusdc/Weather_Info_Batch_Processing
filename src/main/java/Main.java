@@ -37,7 +37,8 @@ public class Main {
         //only for windows
         //System.setProperty("hadoop.home.dir", "C:\\winutils");
 
-        ProducerKafka.produce(pathList);
+        //ProducerKafka.produce(pathList);
+        ConsumerGroup.consume();
 
 
         if (false) {

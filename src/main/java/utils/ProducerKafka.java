@@ -19,6 +19,12 @@ public class ProducerKafka {
         //Assign localhost id
         props.put("bootstrap.servers", "localhost:9092");
 
+        /*
+        props.put("message.max.bytes", "41943040");
+        props.put("max.request.size", "41943040");
+        props.put("replica.fetch.max.bytes", "41943040");
+        props.put("fetch.message.max.bytes", "41943040");*/
+
         //Set acknowledgements for ProducerKafka requests.
         props.put("acks", "all");
 
@@ -46,6 +52,7 @@ public class ProducerKafka {
         for(int x=0;x<topic.length;x++){
             File file=new File(System.getProperty("user.dir")+"/"+pathList[x]);
             String str = FileUtils.readFileToString(file);
+            System.out.println(str);
             producer.send(new ProducerRecord<String, String>(topic[x],str));
         }
 
