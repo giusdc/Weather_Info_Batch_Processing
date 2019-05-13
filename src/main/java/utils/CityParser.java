@@ -17,15 +17,6 @@ public class CityParser {
 
         CityInfo city=null;
 
-        System.out.println(line);
-        String def =
-                "{\"type\":\"record\",\"name\":\"cityAttributes\",\"fields\":"
-                        +"[{\"type\":\""+"string"+"\",\"name\":\"n\"}]}";
-        Schema schema = new Schema.Parser().parse(new File("avsc/cityAttributes.avsc"));
-        System.out.println("CIAOOOOO"+line);
-        Decoder decoder = DecoderFactory.get().jsonDecoder(schema, line);
-        DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(schema);
-        GenericRecord pippo = datumReader.read(null, decoder);
 
 
         String[] csvValues = line.split(",",-1);

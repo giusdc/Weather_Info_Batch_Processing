@@ -1,14 +1,21 @@
+import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
+import org.apache.commons.io.FileUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import scala.Tuple2;
-import utils.CityParser;
-import utils.CountryMap;
-import utils.CsvToAvroConverter;
-import utils.UTCUtils;
+import utils.*;
 
+import java.io.File;
 import java.text.ParseException;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -20,7 +27,7 @@ public class Main {
 
     private static String pathToCityFile = "data/city_attributes.csv";
     private static String pathWeather = "data/weather_description.csv";
-    private static String[] pathList={"data/temperature.csv","data/pressure.csv","data/humidity.csv","data/city_attributes.csv"};
+    private static String[] pathList={"data/temperature.csv","data/pressure.csv","data/humidity.csv","data/city_attributes.csv","data/weather_description.csv"};
 
     private static String pathAvro="avro/cityAttributes.avro";
 
@@ -28,9 +35,12 @@ public class Main {
 
         //CsvToAvroConverter.converter(pathList, pathToCityFile);
         //only for windows
-        System.setProperty("hadoop.home.dir", "C:\\winutils");
+        //System.setProperty("hadoop.home.dir", "C:\\winutils");
 
-        if (true) {
+        ProducerKafka.produce(pathList);
+
+
+        if (false) {
             long startTime = System.currentTimeMillis();
             SparkConf conf = new SparkConf()
                     .setMaster("local")
@@ -38,10 +48,18 @@ public class Main {
             JavaSparkContext sc = new JavaSparkContext(conf);
             sc.setLogLevel("ERROR");
 
+
             //Get mapping city->country
-            JavaRDD<String> city_info = sc.textFile(pathAvro);
+            JavaRDD<String> city_info = sc.textFile(pathToCityFile);
             //city_info.saveAsTextFile("prova");
             String header = city_info.first();
+
+            /*
+            SparkSession spark= SparkSession.builder()
+                    .appName("App")
+                    .getOrCreate();
+            Dataset<Row> pippo = spark.read().format("avro").load(pathAvro);
+            */
             JavaPairRDD<String, String> cityCountryMapRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), CountryMap.sendGet(c))).cache();
             JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), new Float[]{Float.parseFloat(CityParser.parseCsv(c).getLatitude()), Float.parseFloat(CityParser.parseCsv(c).getLongitude())}));
 
@@ -62,7 +80,7 @@ public class Main {
             switch (query) {
                 case 1:
                     /*  Process Query 1 */
-                    Query1.getResponse(sc, pathList[3], zoneIdList, hmapCities/*useless*/);
+                    Query1.getResponse(sc, pathWeather, zoneIdList, hmapCities/*useless*/);
                     break;
 
                 case 2:
@@ -75,7 +93,7 @@ public class Main {
                     Query3.getResponse(sc, pathList[0], zoneIdList, hmapCities);
                     break;
                 case 4:
-                    Query1.getResponse(sc, pathList[3], zoneIdList, hmapCities);
+                    Query1.getResponse(sc, pathWeather, zoneIdList, hmapCities);
                     Query2.getResponse(sc, pathList, zoneIdList, hmapCities);
                     Query3.getResponse(sc, pathList[0], zoneIdList, hmapCities);
                 default:

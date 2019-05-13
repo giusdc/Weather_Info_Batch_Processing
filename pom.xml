@@ -66,7 +66,7 @@
             <artifactId>protobuf-java</artifactId>
             <version>3.7.1</version>
         </dependency>
-
+    <!--
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
@@ -79,6 +79,7 @@
             <artifactId>hadoop-client</artifactId>
             <version>3.2.0</version>
         </dependency>
+        -->
 
 
         <dependency>
@@ -92,6 +93,19 @@
             <artifactId>commons-csv</artifactId>
             <version>1.6</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.databricks</groupId>
+            <artifactId>spark-avro_2.11</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.11</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+
 
 
 

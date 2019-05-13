@@ -17,7 +17,7 @@ public class Query2 {
 
 
         //Get temperature values
-        for(int i=0;i<pathList.length-1;i++){
+        for(int i=0;i<pathList.length-2;i++){
             int index=i;
             JavaRDD<String> tempInfo= sc.textFile(pathList[i]);
             String headerTemp=tempInfo.first();
