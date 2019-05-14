@@ -38,10 +38,10 @@ public class Main {
         //System.setProperty("hadoop.home.dir", "C:\\winutils");
 
         //ProducerKafka.produce(pathList);
-        ConsumerGroup.consume();
+        //ConsumerGroup.consume();
 
 
-        if (false) {
+        if (true) {
             long startTime = System.currentTimeMillis();
             SparkConf conf = new SparkConf()
                     .setMaster("local")
@@ -55,12 +55,16 @@ public class Main {
             //city_info.saveAsTextFile("prova");
             String header = city_info.first();
 
-            /*
+/*
             SparkSession spark= SparkSession.builder()
                     .appName("App")
                     .getOrCreate();
             Dataset<Row> pippo = spark.read().format("avro").load(pathAvro);
-            */
+            JavaRDD<Row> pluto = pippo.toJavaRDD();
+            List<Row> ko = pluto.collect();
+            ko.get(0);
+            pluto.saveAsTextFile("fufi");*/
+
             JavaPairRDD<String, String> cityCountryMapRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), CountryMap.sendGet(c))).cache();
             JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), new Float[]{Float.parseFloat(CityParser.parseCsv(c).getLatitude()), Float.parseFloat(CityParser.parseCsv(c).getLongitude())}));
 
