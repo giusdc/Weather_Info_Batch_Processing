@@ -1,5 +1,7 @@
 package utils;
 
+import scala.Tuple2;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -54,23 +56,45 @@ public class Stats implements Serializable {
         return String.valueOf(this.getAvg()) + "," + String.valueOf(this.getVar()) + "," + String.valueOf(this.getMin()) + "," + String.valueOf(this.getMax());
     }
 
-    public String computeRank() {
+    public String computeRank(String key,List<Tuple2<String, Stats>> rank2016) {
 
 
         String[] rankArray = this.rank.toArray(new String[0]);
-        HashMap<Double, String> hashMap = new HashMap<>();
+        HashMap<Double, String> hashMap2017 = new HashMap<>();
+        HashMap<Double, String> hashMap2016 = new HashMap<>();
+
 
         for (int x = 0; x < rankArray.length; x++) {
-            hashMap.put(Double.parseDouble(rankArray[x].split("_")[0]), rankArray[x].split("_")[1]);
+            hashMap2017.put(Double.parseDouble(rankArray[x].split("_")[0]), rankArray[x].split("_")[1]);
+        }
+        Tuple2<String, Stats> rankCity=null;
+        for(int x=0;x<rank2016.size();x++){
+            Tuple2<String, Stats> rankToCheck = rank2016.get(x);
+            if(rankToCheck._1().split("_")[0].equals(key.split("_")[0])){
+                rankCity= rankToCheck;
+            }
+
+        }
+        String[] rankCity2016 = rankCity._2().getRank().toArray(new String[0]);
+        for (int x = 0; x < rankArray.length; x++) {
+            hashMap2016.put(Double.parseDouble(rankCity2016[x].split("_")[0]), rankCity2016[x].split("_")[1]);
         }
 
-        TreeMap map = new TreeMap<>(hashMap);
-        List<String> cities = new ArrayList<>(map.values());
+
+
+
+        TreeMap map2016 = new TreeMap<>(Collections.reverseOrder());
+        map2016.putAll(hashMap2016);
+        List<String> cities2016 = new ArrayList<>(map2016.values());
+        TreeMap map2017 = new TreeMap<>(Collections.reverseOrder());
+        map2017.putAll(hashMap2017);
+        List<String> cities2017 = new ArrayList<>(map2017.values());
         String result = "";
 
-        for (int i = cities.size()-1; i > 0; i--) {
-            result += cities.get(i)+",";
-            if (i == cities.size() - 3)
+        for (int i = 0; i <cities2017.size(); i++) {
+
+            result += cities2017.get(i)+"_"+String.valueOf(cities2016.indexOf(cities2017.get(i))+1)+",";
+            if (i == 2)
                 return result;
         }
         return result;

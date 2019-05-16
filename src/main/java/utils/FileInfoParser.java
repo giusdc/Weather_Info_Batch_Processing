@@ -103,10 +103,6 @@ public class FileInfoParser {
 
         String[] avgX= x.split("_");
         String[] avgY= y.split("_");
-
-        if(avgX[0].equals("S"))
-            return String.valueOf(Double.parseDouble(avgX[1])-Double.parseDouble(avgY[1]));
-        else
-            return String.valueOf(Double.parseDouble(avgY[1])-Double.parseDouble(avgX[1]));
+        return String.valueOf(Math.abs(Double.parseDouble(avgX[1])-Double.parseDouble(avgY[1])));
     }
 }

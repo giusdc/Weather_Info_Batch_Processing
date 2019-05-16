@@ -4,6 +4,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -41,17 +42,24 @@ public class Main {
         //ConsumerGroup.consume();
 
 
+        //HDFSUtils.init(pathList);
         if (true) {
             long startTime = System.currentTimeMillis();
             SparkConf conf = new SparkConf()
                     .setMaster("local")
                     .setAppName("Query");
+
             JavaSparkContext sc = new JavaSparkContext(conf);
+            Configuration hadoopconf = sc.hadoopConfiguration();
+            hadoopconf.set("fs.defaultFS","hdfs://52.29.87.60:8020");
+            hadoopconf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+            hadoopconf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
             sc.setLogLevel("ERROR");
 
 
             //Get mapping city->country
-            JavaRDD<String> city_info = sc.textFile(pathToCityFile);
+
+            JavaRDD<String> city_info = sc.textFile("hdfs://52.29.87.60:8020/user/hdfs/City_attributes.csv");
             //city_info.saveAsTextFile("prova");
             String header = city_info.first();
 
@@ -78,6 +86,7 @@ public class Main {
             List<Tuple2<String, ZoneId>> mapping = UTCUtils.getZoneId(values, citiesName);
             JavaRDD rdd = sc.parallelize(mapping);
             JavaPairRDD<String, ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
+            mappingPair.saveAsTextFile(System.getProperty("user.dir")+"/"+"prova");
             List<ZoneId> zoneIdList = mappingPair.values().collect();
 
             int query = Integer.parseInt(args[0]);

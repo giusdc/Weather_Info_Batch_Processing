@@ -33,11 +33,14 @@ public class Query3 {
         JavaPairRDD<String, String> diffAvg = avgResult.reduceByKey((x, y) -> FileInfoParser.splitAvg(x, y))
                                                        .mapToPair(p->new Tuple2<>(p._1().split("_")[0]+"_"+p._1().split("_")[2],p._2()+"_"+p._1().split("_")[1]));
 
+
         JavaPairRDD<String, Stats> rankRDD = diffAvg.aggregateByKey((new Stats(null)),
                 (v,x) -> new Stats(v.addElement(x)),
-                (v1,v2) -> new Stats(Lists.newArrayList(Iterables.concat(v1.getRank(),v2.getRank()))));
-        //
-        JavaPairRDD<String,String>output=rankRDD.mapToPair(p->new Tuple2<>(p._1(),p._2().computeRank()));
+                (v1,v2) -> new Stats(Lists.newArrayList(Iterables.concat(v1.getRank(),v2.getRank())))).cache();
+        List<Tuple2<String, Stats>> rank2016 = rankRDD.filter(x -> x._1().split("_")[1].equals("2016")).collect();
+        JavaPairRDD<String, Stats> rank2017 = rankRDD.filter(x -> x._1().split("_")[1].equals("2017"));
+
+        JavaPairRDD<String,String>output=rank2017.mapToPair(p->new Tuple2<>(p._1(),p._2().computeRank(p._1(),rank2016)));
 
         //diffAvg.saveAsTextFile("ciao");
         output.saveAsTextFile("output_query3");
