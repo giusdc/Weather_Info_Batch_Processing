@@ -10,6 +10,7 @@ import org.apache.spark.sql.sources.In;
 import scala.Tuple2;
 import utils.*;
 
+import java.io.IOException;
 import java.text.ParseException;
 
 import java.time.ZoneId;
@@ -19,7 +20,7 @@ import java.util.List;
 
 public class Query1 {
 
-    public static void getResponse(JavaSparkContext sc, String pathWeather, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities) {
+    public static void getResponse(JavaSparkContext sc, String pathWeather, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities) throws IOException {
 
         JavaRDD<String> weather_info= sc.textFile(pathWeather);
 
@@ -39,6 +40,7 @@ public class Query1 {
         JavaPairRDD<String, Iterable<String>> results= weather_infoJavaRDD.mapToPair(p-> new Tuple2<>(p._1().split("_")[1],p._1().split("_")[0])).groupByKey();
 
         results.saveAsTextFile("hdfs://3.122.52.163:8020/user/query1");
+        HBaseUtils.execute("/user/query1/part-00000",1,-1);
 
 
     }

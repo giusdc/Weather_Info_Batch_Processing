@@ -4,6 +4,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 import utils.*;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -13,7 +14,7 @@ import java.util.List;
 public class Query2 {
 
 
-    public static void getResponse(JavaSparkContext sc,String[] pathList,List<ZoneId> zoneIdList,HashMap<String,String> hmapCities) throws ParseException {
+    public static void getResponse(JavaSparkContext sc,String[] pathList,List<ZoneId> zoneIdList,HashMap<String,String> hmapCities) throws ParseException, IOException {
 
 
         //Get temperature values
@@ -35,6 +36,8 @@ public class Query2 {
             JavaPairRDD<String,String> AvgResult = avgRDD.mapToPair( p->new Tuple2<>(p._1(), p._2().getValues())).sortByKey();
             //TODO
             AvgResult.saveAsTextFile("hdfs://3.122.52.163:8020/user/query2/"+i);
+            HBaseUtils.execute("/user/query2/"+i+"/part-00000",2,i);
+
         }
 
     }

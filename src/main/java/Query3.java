@@ -5,15 +5,17 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 import utils.FileInfoParser;
+import utils.HBaseUtils;
 import utils.Stats;
 
+import java.io.IOException;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 public class Query3 {
-    public static void getResponse(JavaSparkContext sc, String pathFile, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities) {
+    public static void getResponse(JavaSparkContext sc, String pathFile, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities) throws IOException {
 
         //Get temperature values
         JavaRDD<String> tempInfo= sc.textFile(pathFile);
@@ -44,6 +46,8 @@ public class Query3 {
 
         //diffAvg.saveAsTextFile("ciao");
         output.saveAsTextFile("hdfs://3.122.52.163:8020/user/query3");
+        HBaseUtils.execute("/user/query3/part-00000",3,-1);
+
 
     }
 }
