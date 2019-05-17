@@ -116,14 +116,14 @@ public class UTCUtils {
 
     }
 
-    public static void main(String args[]) throws IOException {
+    public static void read() throws IOException {
 
         System.out.println("pippo");
-        String hdfsuri = "hdfs://35.180.172.56:8020";
+        String hdfsuri = "hdfs://3.122.52.163:8020";
 
-        String path="/user/hdfs/example/hdfs/";
-        String fileName="hello.csv";
-        String fileContent="hello;world";
+        String path="/user/prova/";
+        String fileName="part-00000";
+        //String fileContent="hello;world";
 
         // ====== Init HDFS File System Object
         Configuration conf = new Configuration();
@@ -155,13 +155,13 @@ public class UTCUtils {
         FileSystem fs = FileSystem.get(URI.create(hdfsuri),conf);
         Path workingDir=fs.getWorkingDirectory();
         Path newFolderPath= new Path(path);
-        if(!fs.exists(newFolderPath)) {
+       if(!fs.exists(newFolderPath)) {
             // Create new Directory
             fs.mkdirs(newFolderPath);
             System.out.println("Path "+path+" created.");
         }
 
-
+/*
         //==== Write file
         System.out.println("Begin Write file into hdfs");
         //Create a path
@@ -171,16 +171,16 @@ public class UTCUtils {
         //Cassical output stream usage
         outputStream.writeBytes(fileContent);
         outputStream.close();
-        System.out.println("End Write file into hdfs");
-/*
-        Path hdfsreadpath = new Path("/user/hdfs/fufi.txt");
+        System.out.println("End Write file into hdfs");*/
+
+        Path hdfsreadpath = new Path("/user/prova/part-00000");
         //Init input stream
         FSDataInputStream inputStream = fs.open(hdfsreadpath);
         //Classical input stream usage
         String out= IOUtils.toString(inputStream, "UTF-8");
         System.out.println(out);
         inputStream.close();
-        fs.close();*/
+        fs.close();
 
     }
 

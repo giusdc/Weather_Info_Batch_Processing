@@ -43,7 +43,7 @@ public class Query3 {
         JavaPairRDD<String,String>output=rank2017.mapToPair(p->new Tuple2<>(p._1(),p._2().computeRank(p._1(),rank2016)));
 
         //diffAvg.saveAsTextFile("ciao");
-        output.saveAsTextFile("output_query3");
+        output.saveAsTextFile("hdfs://3.122.52.163:8020/user/query3");
 
     }
 }

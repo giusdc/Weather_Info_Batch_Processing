@@ -38,7 +38,7 @@ public class Query1 {
                 .reduceByKey((x,y)->x+y).filter(p->p._2()>=3);
         JavaPairRDD<String, Iterable<String>> results= weather_infoJavaRDD.mapToPair(p-> new Tuple2<>(p._1().split("_")[1],p._1().split("_")[0])).groupByKey();
 
-        results.saveAsTextFile("output_query1");
+        results.saveAsTextFile("hdfs://3.122.52.163:8020/user/query1");
 
 
     }

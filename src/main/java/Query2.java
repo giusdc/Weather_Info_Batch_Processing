@@ -33,7 +33,8 @@ public class Query2 {
                     (v1,v2) -> new Stats(v1.getSum()+v2.getSum(),v1.getNum()+v2.getNum(),v1.getSumSquare()+v2.getSumSquare(),Math.min(v1.getMin(),v2.getMin()),Math.max(v1.getMax(),v2.getMax())));
 
             JavaPairRDD<String,String> AvgResult = avgRDD.mapToPair( p->new Tuple2<>(p._1(), p._2().getValues())).sortByKey();
-            AvgResult.saveAsTextFile("output_query2/"+pathList[i]);
+            //TODO
+            AvgResult.saveAsTextFile("hdfs://3.122.52.163:8020/user/query2/"+i);
         }
 
     }

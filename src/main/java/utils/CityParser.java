@@ -7,6 +7,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.spark.sql.Row;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,10 +34,27 @@ public class CityParser {
         return city;
     }
 
+    /*
+
+    public static CityInfo parseAvro(Row row) {
+
+        CityInfo city=null;
+
+        for(int i=0; i<row.length();i++){
+            String[] values = .split(",",-1);
+
+        }
+
+
+        //Create object
+        city =new CityInfo(values[0], values[1], values[2]);
+
+
+        return city;
+    }
 
 
 
-
-
+     */
 
 }

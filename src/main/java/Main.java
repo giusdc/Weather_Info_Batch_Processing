@@ -28,7 +28,7 @@ public class Main {
 
     private static String pathToCityFile = "data/city_attributes.csv";
     private static String pathWeather = "data/weather_description.csv";
-    private static String[] pathList={"data/temperature.csv","data/pressure.csv","data/humidity.csv","data/city_attributes.csv","data/weather_description.csv"};
+    private static String[] pathList={"hdfs://3.122.52.163:8020/user/hdfs/Temperature.csv","hdfs://3.122.52.163:8020/user/hdfs/Pressure.csv","hdfs://3.122.52.163:8020/user/hdfs/Humidity.csv","hdfs://3.122.52.163:8020/user/hdfs/City_attributes.csv","hdfs://3.122.52.163:8020/user/hdfs/Weather.csv"};
 
     private static String pathAvro="avro/cityAttributes.avro";
 
@@ -41,6 +41,7 @@ public class Main {
         //ProducerKafka.produce(pathList);
         //ConsumerGroup.consume();
 
+        //UTCUtils.read();
 
         //HDFSUtils.init(pathList);
         if (true) {
@@ -50,28 +51,40 @@ public class Main {
                     .setAppName("Query");
 
             JavaSparkContext sc = new JavaSparkContext(conf);
+
             Configuration hadoopconf = sc.hadoopConfiguration();
-            hadoopconf.set("fs.defaultFS","hdfs://52.29.87.60:8020");
+            hadoopconf.set("fs.defaultFS","hdfs://3.122.52.163:8020");
             hadoopconf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             hadoopconf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+            hadoopconf.set("dfs.permissions","false");
             sc.setLogLevel("ERROR");
 
 
             //Get mapping city->country
 
-            JavaRDD<String> city_info = sc.textFile("hdfs://52.29.87.60:8020/user/hdfs/City_attributes.csv");
-            //city_info.saveAsTextFile("prova");
+            JavaRDD<String> city_info = sc.textFile("hdfs://3.122.52.163:8020/user/hdfs/City_attributes.csv");
+            //JavaRDD<String> city_info = sc.textFile(pathAvro);
+
             String header = city_info.first();
 
-/*
+
+            /*
             SparkSession spark= SparkSession.builder()
                     .appName("App")
                     .getOrCreate();
-            Dataset<Row> pippo = spark.read().format("avro").load(pathAvro);
-            JavaRDD<Row> pluto = pippo.toJavaRDD();
-            List<Row> ko = pluto.collect();
-            ko.get(0);
-            pluto.saveAsTextFile("fufi");*/
+            Dataset<Row> avroInput = spark.read().format("avro").load(pathAvro);
+            JavaRDD<Row> avroRow = avroInput.toJavaRDD();
+            List<Row> ko = avroRow.collect();
+            System.out.printf(ko.get(0).toString());
+            //pluto.saveAsTextFile("fufi");
+
+             */
+
+            /*
+            JavaPairRDD<String, String> cityCountryMapRDD = avroRow.mapToPair(c -> new Tuple2<>(CityParser.parseAvro(c).getCity(), CountryMap.sendGet(c))).cache();
+            JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), new Float[]{Float.parseFloat(CityParser.parseCsv(c).getLatitude()), Float.parseFloat(CityParser.parseCsv(c).getLongitude())}));
+             */
+
 
             JavaPairRDD<String, String> cityCountryMapRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), CountryMap.sendGet(c))).cache();
             JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), new Float[]{Float.parseFloat(CityParser.parseCsv(c).getLatitude()), Float.parseFloat(CityParser.parseCsv(c).getLongitude())}));
@@ -86,7 +99,7 @@ public class Main {
             List<Tuple2<String, ZoneId>> mapping = UTCUtils.getZoneId(values, citiesName);
             JavaRDD rdd = sc.parallelize(mapping);
             JavaPairRDD<String, ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
-            mappingPair.saveAsTextFile(System.getProperty("user.dir")+"/"+"prova");
+           // mappingPair.saveAsTextFile("hdfs://3.122.52.163:8020/user/prova");
             List<ZoneId> zoneIdList = mappingPair.values().collect();
 
             int query = Integer.parseInt(args[0]);
@@ -94,7 +107,7 @@ public class Main {
             switch (query) {
                 case 1:
                     /*  Process Query 1 */
-                    Query1.getResponse(sc, pathWeather, zoneIdList, hmapCities/*useless*/);
+                    Query1.getResponse(sc, pathList[4], zoneIdList, hmapCities/*useless*/);
                     break;
 
                 case 2:
@@ -107,7 +120,7 @@ public class Main {
                     Query3.getResponse(sc, pathList[0], zoneIdList, hmapCities);
                     break;
                 case 4:
-                    Query1.getResponse(sc, pathWeather, zoneIdList, hmapCities);
+                    Query1.getResponse(sc, pathList[4], zoneIdList, hmapCities);
                     Query2.getResponse(sc, pathList, zoneIdList, hmapCities);
                     Query3.getResponse(sc, pathList[0], zoneIdList, hmapCities);
                 default:
