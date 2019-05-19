@@ -26,61 +26,57 @@ import java.util.Map;
 
 public class Main {
 
-    private static String pathToCityFile = "data/city_attributes.csv";
-    private static String pathWeather = "data/weather_description.csv";
-    private static String[] pathList={"hdfs://3.122.52.163:8020/user/hdfs/Temperature.csv","hdfs://3.122.52.163:8020/user/hdfs/Pressure.csv","hdfs://3.122.52.163:8020/user/hdfs/Humidity.csv","hdfs://3.122.52.163:8020/user/hdfs/City_attributes.csv","hdfs://3.122.52.163:8020/user/hdfs/Weather.csv"};
+    public static String hdfs_uri = "hdfs://35.159.37.27:8020";
 
-    private static String pathAvro="avro/cityAttributes.avro";
+    private static String[] pathList = {hdfs_uri + "/user/hdfs/Temperature.csv", hdfs_uri + "/user/hdfs/Pressure.csv", hdfs_uri + "/user/hdfs/Humidity.csv", hdfs_uri + "/user/hdfs/City_attributes.csv", hdfs_uri + "/user/hdfs/Weather.csv"};
+    private static String[] pathListAvro = {hdfs_uri + "/user/hdfs/Temperature.avro", hdfs_uri + "/user/hdfs/Pressure.avro", hdfs_uri + "/user/hdfs/Humidity.avro", hdfs_uri + "/user/hdfs/City_attributes.avro", hdfs_uri + "/user/hdfs/Weather.avro"};
+
+    //private static String pathAvro="avro/cityAttributes.avro";
+    public static long startTime;
+
 
     public static void main(String[] args) throws Exception {
 
         //CsvToAvroConverter.converter(pathList, pathToCityFile);
-        //only for windows
-        //System.setProperty("hadoop.home.dir", "C:\\winutils");
-
-        //ProducerKafka.produce(pathList);
-        //ConsumerGroup.consume();
 
         //UTCUtils.read();
-
         //HDFSUtils.init(pathList);
-        if (true) {
-            long startTime = System.currentTimeMillis();
-            SparkConf conf = new SparkConf()
-                    .setMaster("local")
-                    .setAppName("Query");
 
-            JavaSparkContext sc = new JavaSparkContext(conf);
+        //starting timer
+        startTime = System.currentTimeMillis();
 
-            Configuration hadoopconf = sc.hadoopConfiguration();
-            hadoopconf.set("fs.defaultFS","hdfs://3.122.52.163:8020");
-            hadoopconf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-            hadoopconf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-            hadoopconf.set("dfs.permissions","false");
-            sc.setLogLevel("ERROR");
+        SparkConf conf = new SparkConf()
+                .setMaster("local")
+                .setAppName("Query");
+
+        JavaSparkContext sc = new JavaSparkContext(conf);
+
+        Configuration hadoopconf = sc.hadoopConfiguration();
+        hadoopconf.set("fs.defaultFS", hdfs_uri);
+        hadoopconf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        hadoopconf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+        hadoopconf.set("dfs.permissions", "false");
+        sc.setLogLevel("ERROR");
+
+        SparkSession spark = SparkSession.builder()
+                .appName("App")
+                .getOrCreate();
+        Dataset<Row> avroInput = spark.read().format("avro").load(pathListAvro[3]);
+        JavaRDD<Row> avroRow = avroInput.toJavaRDD();
+        List<Row> ko = avroRow.collect();
+        System.out.printf(ko.get(0).toString());
 
 
-            //Get mapping city->country
+        //Get mapping city->country
+        if (false) {
 
-            JavaRDD<String> city_info = sc.textFile("hdfs://3.122.52.163:8020/user/hdfs/City_attributes.csv");
+            JavaRDD<String> city_info = sc.textFile(pathList[3]);
             //JavaRDD<String> city_info = sc.textFile(pathAvro);
 
             String header = city_info.first();
+            
 
-
-            /*
-            SparkSession spark= SparkSession.builder()
-                    .appName("App")
-                    .getOrCreate();
-            Dataset<Row> avroInput = spark.read().format("avro").load(pathAvro);
-            JavaRDD<Row> avroRow = avroInput.toJavaRDD();
-            List<Row> ko = avroRow.collect();
-            System.out.printf(ko.get(0).toString());
-            //pluto.saveAsTextFile("fufi");
-
-             */
-
-            /*
+            /* for avro
             JavaPairRDD<String, String> cityCountryMapRDD = avroRow.mapToPair(c -> new Tuple2<>(CityParser.parseAvro(c).getCity(), CountryMap.sendGet(c))).cache();
             JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parseCsv(c).getCity(), new Float[]{Float.parseFloat(CityParser.parseCsv(c).getLatitude()), Float.parseFloat(CityParser.parseCsv(c).getLongitude())}));
              */
@@ -99,7 +95,7 @@ public class Main {
             List<Tuple2<String, ZoneId>> mapping = UTCUtils.getZoneId(values, citiesName);
             JavaRDD rdd = sc.parallelize(mapping);
             JavaPairRDD<String, ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd).cache();
-           // mappingPair.saveAsTextFile("hdfs://3.122.52.163:8020/user/prova");
+            // mappingPair.saveAsTextFile("hdfs://3.122.52.163:8020/user/prova");
             List<ZoneId> zoneIdList = mappingPair.values().collect();
 
             int query = Integer.parseInt(args[0]);
@@ -128,11 +124,9 @@ public class Main {
 
             }
             sc.stop();
-            long endTime = System.currentTimeMillis();
-            long timeElapsed = endTime - startTime;
-            System.out.println("Execution time in seconds: " + timeElapsed / 1000);
-
 
         }
+
+
     }
 }

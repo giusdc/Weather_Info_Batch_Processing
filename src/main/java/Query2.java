@@ -35,8 +35,15 @@ public class Query2 {
 
             JavaPairRDD<String,String> AvgResult = avgRDD.mapToPair( p->new Tuple2<>(p._1(), p._2().getValues())).sortByKey();
             //TODO
-            AvgResult.saveAsTextFile("hdfs://3.122.52.163:8020/user/query2/"+i);
-            HBaseUtils.execute("/user/query2/"+i+"/part-00000",2,i);
+            AvgResult.saveAsTextFile(Main.hdfs_uri+"/user/query2/"+i);
+
+
+            long endTime = System.currentTimeMillis();
+            long timeElapsed = endTime - Main.startTime;
+            System.out.println("Execution time in seconds: " + timeElapsed / 1000);
+
+
+            HBaseUtils.execute("/user/query2/"+i+"/part-00000",2,i,Main.hdfs_uri);
 
         }
 

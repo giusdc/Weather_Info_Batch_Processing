@@ -45,8 +45,13 @@ public class Query3 {
         JavaPairRDD<String,String>output=rank2017.mapToPair(p->new Tuple2<>(p._1(),p._2().computeRank(p._1(),rank2016)));
 
         //diffAvg.saveAsTextFile("ciao");
-        output.saveAsTextFile("hdfs://3.122.52.163:8020/user/query3");
-        HBaseUtils.execute("/user/query3/part-00000",3,-1);
+        output.saveAsTextFile(Main.hdfs_uri+"/user/query3");
+
+        long endTime = System.currentTimeMillis();
+        long timeElapsed = endTime - Main.startTime;
+        System.out.println("Execution time in seconds: " + timeElapsed / 1000);
+
+        HBaseUtils.execute("/user/query3/part-00000",3,-1,Main.hdfs_uri);
 
 
     }
