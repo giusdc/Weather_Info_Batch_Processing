@@ -21,6 +21,7 @@ public class Main {
     public static String hdfs_uri = "hdfs://35.158.98.173:8020";
 
     private static String[] pathListCsv = {hdfs_uri + "/user/hdfs/temperature.csv", hdfs_uri + "/user/hdfs/pressure.csv", hdfs_uri + "/user/hdfs/humidity.csv", hdfs_uri + "/user/hdfs/city_attributes.csv", hdfs_uri + "/user/hdfs/weather_description.csv"};
+    //private static String[] pathListCsv = {"data/temperature.csv", "data/pressure.csv", "data/humidity.csv", "data/city_attributes.csv", "data/weather_description.csv"};
     private static String[] pathListAvro = {hdfs_uri + "/user/hdfs/temperature.avro", hdfs_uri + "/user/hdfs/pressure.avro", hdfs_uri + "/user/hdfs/humidity.avro", hdfs_uri + "/user/hdfs/city_attributes.avro", hdfs_uri + "/user/hdfs/weather_description.avro"};
 
     //private static String pathAvro="avro/cityAttributes.avro";
@@ -43,10 +44,10 @@ public class Main {
                 .setAppName("Query");
 
         JavaSparkContext sc = new JavaSparkContext(conf);
-
+/*
         Configuration hadoopconf = sc.hadoopConfiguration();
         hadoopconf.addResource(new Path("/etc/hadoop/conf/core-site.xml"));
-        hadoopconf.addResource(new Path("/etc/hadoop/conf/hdfs-site.xml"));
+        hadoopconf.addResource(new Path("/etc/hadoop/conf/hdfs-site.xml"));*/
         /*hadoopconf.set("fs.defaultFS", hdfs_uri);
        // hadoopconf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         hadoopconf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
@@ -85,6 +86,8 @@ public class Main {
             JavaRDD<Row> city_info = inputCity.toJavaRDD();
             Row header=city_info.first();
 
+            //city_info.map(x->CityParser.check(x));
+
             //JavaRDD<String> city_info = sc.textFile(pathAvro);
 
 
@@ -92,10 +95,8 @@ public class Main {
             JavaPairRDD<String, String> cityCountryMapRDD = avroRow.mapToPair(c -> new Tuple2<>(CityParser.parseAvro(c).getCity(), CountryMap.sendGet(c))).cache();
             JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parse(c).getCity(), new Float[]{Float.parseFloat(CityParser.parse(c).getLatitude()), Float.parseFloat(CityParser.parse(c).getLongitude())}));
              */
-
-
-            JavaPairRDD<String, String> cityCountryMapRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parse(c).getCity(), CountryMap.sendGet(c))).cache();
-            JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> !y.equals(header)).mapToPair(c -> new Tuple2<>(CityParser.parse(c).getCity(), new Float[]{Float.parseFloat(CityParser.parse(c).getLatitude()), Float.parseFloat(CityParser.parse(c).getLongitude())}));
+            JavaPairRDD<String, String> cityCountryMapRDD = city_info.filter(x->CityParser.check(x,header)/*y -> !y.equals(header) && !y.anyNull()*/).mapToPair(c -> new Tuple2<>(CityParser.parse(c).getCity(), CountryMap.sendGet(c))).cache();
+            JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> CityParser.check(y,header)).mapToPair(c -> new Tuple2<>(CityParser.parse(c).getCity(), new Float[]{Float.parseFloat(CityParser.parse(c).getLatitude()), Float.parseFloat(CityParser.parse(c).getLongitude())}));
 
             Map<String, String> map = cityCountryMapRDD.collectAsMap();
             HashMap<String, String> hmapCities = new HashMap<String, String>(map);

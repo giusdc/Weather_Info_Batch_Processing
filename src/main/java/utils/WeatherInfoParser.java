@@ -72,36 +72,19 @@ public class WeatherInfoParser {
 
     public static Iterator<Tuple2<String, Integer>> parseTemp(Row line, String[] cities, List<ZoneId> zoneIdList) throws ParseException {
 
-        ArrayList<WeatherInfo> weatherInfoArrayList= new ArrayList<>();
+
         List<Tuple2<String,Integer>> results=new ArrayList<>();
-        WeatherInfo weatherInfo=null;
-        String[] values=new String[line.length()];
-
-
-        //String[] csvValues = line.split(",",-1);
-        for(int i=0;i<line.length();i++){
-            if(line.get(i).equals("")){
-                values[i]=null;
-
-            }else{
-                values[i]=line.get(i).toString();
-            }
-        }
-
         //Extract descriptions
         ArrayList<String> descriptions=new ArrayList<>();
-        for(int i=1;i<(values.length);i++){
-            if(values[i]!=null)
-                descriptions.add(values[i]);
-            else
-                descriptions.add(null);
+        for(int i=1;i<(line.length());i++){
+                descriptions.add(line.get(i).toString());
         }
 
         //Create object
         int x=0;
         for(int i=0;i<cities.length;i++){
-            if(descriptions.get(i)!=null){
-                String newdate=UTCUtils.convert(zoneIdList.get(i),values[0]);
+
+                String newdate=UTCUtils.convert(zoneIdList.get(i),line.get(0).toString());
                 String[] datetime=newdate.split("-");
                 String date=datetime[0]+"-"+datetime[1]+"-"+datetime[2].split(" ")[0];
                 if(descriptions.get(i).equals("sky is clear"))
@@ -109,7 +92,7 @@ public class WeatherInfoParser {
                 else x=0;
                 Tuple2<String,Integer> result=new Tuple2<>(cities[i]+"_"+date,x);
                 results.add(result);
-            }
+
         }
         return results.iterator();
     }

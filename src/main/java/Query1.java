@@ -17,6 +17,7 @@ public class Query1 {
 
     public static void getResponse(SparkSession spark, String pathWeather, List<ZoneId> zoneIdList) throws IOException {
 
+
         Dataset<Row> weather_file=null;
         switch (Main.typeFile){
             case 0:
@@ -36,8 +37,11 @@ public class Query1 {
 
        // String[] citiesList = Arrays.copyOfRange(header.split(","), 1, header.split(",").length);
 
+        JavaRDD<Row> r = weather_info.filter(y -> !y.equals(header));
+        List<Row> l = r.collect();
 
-        JavaPairRDD<String, Integer> weather_infoJavaRDD=weather_info.filter(y->!y.equals(header))
+
+        JavaPairRDD<String, Integer> weather_infoJavaRDD=weather_info.filter(y->!y.equals(header) && !y.anyNull())
                 .flatMapToPair(line->WeatherInfoParser.parseTemp(line,citiesList,zoneIdList))
                 .filter(x->x._1().split("-")[1].equals("03") || x._1().split("-")[1].equals("04") || x._1().split("-")[1].equals("05") )
                 .reduceByKey((k,z)->k+z)
