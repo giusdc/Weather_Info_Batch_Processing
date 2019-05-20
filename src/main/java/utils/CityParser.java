@@ -14,21 +14,26 @@ import java.io.IOException;
 
 public class CityParser {
 
-    public static CityInfo parseCsv(String line) throws IOException {
+    public static CityInfo parse(Row line) throws IOException {
 
         CityInfo city=null;
 
+        String[] values=new String[line.length()];
 
 
-        String[] csvValues = line.split(",",-1);
-        for(int i=0;i<csvValues.length;i++){
-            if(csvValues[i].equals("")){
-                csvValues[i]=null;
+        //String[] csvValues = line.split(",",-1);
+        for(int i=0;i<line.length();i++){
+            if(line.get(i).equals("")){
+                values[i]=null;
+
+            }else{
+                values[i]=line.get(i).toString();
             }
         }
 
+
         //Create object
-        city =new CityInfo(csvValues[0], csvValues[1], csvValues[2]);
+        city =new CityInfo(values[0], values[1], values[2]);
 
 
         return city;

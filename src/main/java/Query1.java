@@ -1,35 +1,44 @@
 
-import net.iakovlev.timeshape.TimeZoneEngine;
-import org.apache.spark.SerializableWritable;
-import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 
-import org.apache.spark.sql.sources.In;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import scala.Tuple2;
 import utils.*;
 
 import java.io.IOException;
-import java.text.ParseException;
 
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class Query1 {
 
-    public static void getResponse(JavaSparkContext sc, String pathWeather, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities) throws IOException {
+    public static void getResponse(SparkSession spark, String pathWeather, List<ZoneId> zoneIdList) throws IOException {
 
-        JavaRDD<String> weather_info= sc.textFile(pathWeather);
+        Dataset<Row> weather_file=null;
+        switch (Main.typeFile){
+            case 0:
+                weather_file=spark.read().csv(pathWeather);
+                break;
+            case 1:
+                weather_file=spark.read().format("avro").load(pathWeather);
+                break;
+        }
+        JavaRDD<Row> weather_info=weather_file.toJavaRDD();
+        Row header=weather_info.first();
+        String[] citiesList=new String[header.length()-1];
+        for(int x=1;x<header.length();x++){
+                citiesList[x-1]=header.get(x).toString();
+            }
 
-        String header=weather_info.first();
-        String[] citiesList = Arrays.copyOfRange(header.split(","), 1, header.split(",").length);
+
+       // String[] citiesList = Arrays.copyOfRange(header.split(","), 1, header.split(",").length);
 
 
         JavaPairRDD<String, Integer> weather_infoJavaRDD=weather_info.filter(y->!y.equals(header))
-                .flatMapToPair(line->WeatherInfoParser.parseCsv2(line,citiesList,zoneIdList))
+                .flatMapToPair(line->WeatherInfoParser.parseTemp(line,citiesList,zoneIdList))
                 .filter(x->x._1().split("-")[1].equals("03") || x._1().split("-")[1].equals("04") || x._1().split("-")[1].equals("05") )
                 .reduceByKey((k,z)->k+z)
                 .filter(f->f._2()>=18)

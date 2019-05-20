@@ -2,6 +2,7 @@ package utils;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.spark.sql.Row;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -25,12 +26,12 @@ public class CountryMap {
         }*/
 
     // HTTP GET request
-    public static String sendGet(String line) throws Exception {
+    public static String sendGet(Row line) throws Exception {
 
         //String url2 = "https://nominatim.openstreetmap.org/search.php?q=brandenburger+tor%2C+berlin%2C+deutschland&amp;format=json";
 
 
-        CityInfo city= CityParser.parseCsv(line);
+        CityInfo city= CityParser.parse(line);
 
 
         String url="https://nominatim.openstreetmap.org/reverse?format=json&lat="+city.getLatitude()+"&lon="+city.getLongitude()+"&accept-language=en";

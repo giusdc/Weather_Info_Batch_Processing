@@ -3,6 +3,7 @@ package utils;
 import net.iakovlev.timeshape.TimeZoneEngine;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.Row;
 import scala.Tuple2;
 
 import java.text.DateFormat;
@@ -69,23 +70,29 @@ public class WeatherInfoParser {
 
 
 
-    public static Iterator<Tuple2<String, Integer>> parseCsv2(String line, String[] cities, List<ZoneId> zoneIdList) throws ParseException {
+    public static Iterator<Tuple2<String, Integer>> parseTemp(Row line, String[] cities, List<ZoneId> zoneIdList) throws ParseException {
 
         ArrayList<WeatherInfo> weatherInfoArrayList= new ArrayList<>();
         List<Tuple2<String,Integer>> results=new ArrayList<>();
         WeatherInfo weatherInfo=null;
-        String[] csvValues = line.split(",",-1);
-        for(int i=0;i<csvValues.length;i++){
-            if(csvValues[i].equals("")){
-                csvValues[i]=null;
+        String[] values=new String[line.length()];
+
+
+        //String[] csvValues = line.split(",",-1);
+        for(int i=0;i<line.length();i++){
+            if(line.get(i).equals("")){
+                values[i]=null;
+
+            }else{
+                values[i]=line.get(i).toString();
             }
         }
 
         //Extract descriptions
         ArrayList<String> descriptions=new ArrayList<>();
-        for(int i=1;i<(csvValues.length);i++){
-            if(csvValues[i]!=null)
-                descriptions.add(csvValues[i]);
+        for(int i=1;i<(values.length);i++){
+            if(values[i]!=null)
+                descriptions.add(values[i]);
             else
                 descriptions.add(null);
         }
@@ -94,7 +101,7 @@ public class WeatherInfoParser {
         int x=0;
         for(int i=0;i<cities.length;i++){
             if(descriptions.get(i)!=null){
-                String newdate=UTCUtils.convert(zoneIdList.get(i),csvValues[0]);
+                String newdate=UTCUtils.convert(zoneIdList.get(i),values[0]);
                 String[] datetime=newdate.split("-");
                 String date=datetime[0]+"-"+datetime[1]+"-"+datetime[2].split(" ")[0];
                 if(descriptions.get(i).equals("sky is clear"))
