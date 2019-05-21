@@ -31,7 +31,7 @@ public class CityParser {
     public static boolean check(Row x, Row header) {
 
         if (!x.anyNull())
-            return !x.anyNull() && !x.equals(header) && !(x.get(0).toString().matches(".*\\d.*")) && check_coordinate(x.get(1).toString(), x.get(2).toString());
+            return !x.equals(header) && !(x.get(0).toString().matches(".*\\d.*")) && check_coordinate(x.get(1).toString(), x.get(2).toString());
         return false;
 
 
@@ -52,27 +52,5 @@ public class CityParser {
     }
 
 
-    /*
-
-    public static CityInfo parseAvro(Row row) {
-
-        CityInfo city=null;
-
-        for(int i=0; i<row.length();i++){
-            String[] values = .split(",",-1);
-
-        }
-
-
-        //Create object
-        city =new CityInfo(values[0], values[1], values[2]);
-
-
-        return city;
-    }
-
-
-
-     */
 
 }

@@ -15,18 +15,11 @@ import java.util.List;
 
 public class Query1 {
 
-    public static void getResponse(SparkSession spark, String pathWeather, List<ZoneId> zoneIdList) throws IOException {
+    public static void getResponse(SparkSession spark, String pathWeather, List<ZoneId> zoneIdList,String format) throws IOException {
 
 
         Dataset<Row> weather_file=null;
-        switch (Main.typeFile){
-            case 0:
-                weather_file=spark.read().csv(pathWeather);
-                break;
-            case 1:
-                weather_file=spark.read().format("avro").load(pathWeather);
-                break;
-        }
+        weather_file=spark.read().format(format).load(pathWeather);
         JavaRDD<Row> weather_info=weather_file.toJavaRDD();
         Row header=weather_info.first();
         String[] citiesList=new String[header.length()-1];
@@ -34,21 +27,18 @@ public class Query1 {
                 citiesList[x-1]=header.get(x).toString();
             }
 
-
-       // String[] citiesList = Arrays.copyOfRange(header.split(","), 1, header.split(",").length);
-
         JavaRDD<Row> r = weather_info.filter(y -> !y.equals(header));
         List<Row> l = r.collect();
 
 
-        JavaPairRDD<String, Integer> weather_infoJavaRDD=weather_info.filter(y->!y.equals(header) && !y.anyNull())
-                .flatMapToPair(line->WeatherInfoParser.parseTemp(line,citiesList,zoneIdList))
+        JavaPairRDD<String, Integer> weather_infoJavaRDD=weather_info.filter(x->FileInfoParser.check(x,header))
+                .flatMapToPair(line->FileInfoParser.parseTemp(line,citiesList,zoneIdList))
                 .filter(x->x._1().split("-")[1].equals("03") || x._1().split("-")[1].equals("04") || x._1().split("-")[1].equals("05") )
                 .reduceByKey((k,z)->k+z)
                 .filter(f->f._2()>=18)
-                .mapToPair(p->new Tuple2<>(WeatherInfoParser.getKey(p._1()),1))
+                .mapToPair(p->new Tuple2<>(FileInfoParser.getKey(p._1()),1))
                 .reduceByKey((x,y)->x+y).filter(p->p._2()>=15)
-                .mapToPair(p->new Tuple2<>(WeatherInfoParser.getKey2(p._1()),1))
+                .mapToPair(p->new Tuple2<>(FileInfoParser.getKey2(p._1()),1))
                 .reduceByKey((x,y)->x+y).filter(p->p._2()>=3);
         JavaPairRDD<String, Iterable<String>> results= weather_infoJavaRDD.mapToPair(p-> new Tuple2<>(p._1().split("_")[1],p._1().split("_")[0])).groupByKey();
 
