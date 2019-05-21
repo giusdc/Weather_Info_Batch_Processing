@@ -15,7 +15,7 @@ import java.util.*;
 public class HBaseClient {
 
     /* Configuration Parameters */
-    private static final String ZOOKEEPER_HOST = "localhost";
+    private static final String ZOOKEEPER_HOST = "18.197.134.128";
     private static final String ZOOKEEPER_PORT = "2181";
     private static final String HBASE_MASTER  = "localhost:60000";
     private static final int    HBASE_MAX_VERSIONS = Integer.MAX_VALUE;

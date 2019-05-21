@@ -101,9 +101,9 @@ public class FileInfoParser {
     }
 
 
-    public static boolean check(Row x, Row header){
+    public static boolean check(Row x){
 
-        return  !x.equals(header) && checkDate(x);
+        return  checkDate(x);
 
     }
 

@@ -15,23 +15,15 @@ import java.util.List;
 
 public class Query1 {
 
-    public static void getResponse(SparkSession spark, String pathWeather, List<ZoneId> zoneIdList,String format) throws IOException {
+    public static void getResponse(SparkSession spark, String pathWeather, List<ZoneId> zoneIdList,String format,String[] citiesList) throws IOException {
 
 
         Dataset<Row> weather_file=null;
         weather_file=spark.read().format(format).load(pathWeather);
         JavaRDD<Row> weather_info=weather_file.toJavaRDD();
-        Row header=weather_info.first();
-        String[] citiesList=new String[header.length()-1];
-        for(int x=1;x<header.length();x++){
-                citiesList[x-1]=header.get(x).toString();
-            }
-
-        JavaRDD<Row> r = weather_info.filter(y -> !y.equals(header));
-        List<Row> l = r.collect();
 
 
-        JavaPairRDD<String, Integer> weather_infoJavaRDD=weather_info.filter(x->FileInfoParser.check(x,header))
+        JavaPairRDD<String, Integer> weather_infoJavaRDD=weather_info.filter(x->FileInfoParser.check(x))
                 .flatMapToPair(line->FileInfoParser.parseTemp(line,citiesList,zoneIdList))
                 .filter(x->x._1().split("-")[1].equals("03") || x._1().split("-")[1].equals("04") || x._1().split("-")[1].equals("05") )
                 .reduceByKey((k,z)->k+z)

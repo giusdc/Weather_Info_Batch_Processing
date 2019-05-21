@@ -6,8 +6,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="proj1_sabd" />
         <module name="sabd_query" />
+        <module name="proj1_sabd" />
+        <module name="query1sabd" />
       </profile>
     </annotationProcessing>
   </component>

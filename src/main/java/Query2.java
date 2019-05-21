@@ -15,7 +15,7 @@ import java.util.List;
 public class Query2 {
 
 
-    public static JavaRDD<Row> getResponse(SparkSession spark, String[] pathList, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities, String format) throws ParseException, IOException {
+    public static JavaRDD<Row> getResponse(SparkSession spark, String[] pathList, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities, String format,String[] citiesList) throws ParseException, IOException {
 
         JavaRDD<Row> filterRDD,prova=null;
         String cities[]=null;
@@ -24,19 +24,13 @@ public class Query2 {
         for(int i=0;i<pathList.length-2;i++){
             int index=i;
             Dataset<Row> fileRow = spark.read().format(format).load(pathList[i]);
-            Row header=fileRow.first();
-            String[] citiesList=new String[header.length()-1];
-            for(int x=1;x<header.length();x++){
-                citiesList[x-1]=header.get(x).toString();
-            }
             JavaRDD<Row> fileRDD = fileRow.toJavaRDD();
 
-            filterRDD = fileRDD.filter(x->FileInfoParser.check(x,header)).cache();
+            filterRDD = fileRDD.filter(x->FileInfoParser.check(x)).cache();
 
             if(index==0){
-                 prova = fileRDD.filter(x -> FileInfoParser.check(x, header)).cache();
+                 prova = fileRDD.filter(x -> FileInfoParser.check(x)).cache();
                 //tempRDD=filterRDD;
-                cities=citiesList;
             }
 
             JavaPairRDD<String, Float> fileInfoRDD = filterRDD.flatMapToPair(line -> FileInfoParser.parse(line, citiesList, hmapCities, zoneIdList, index, false)).sortByKey().cache();

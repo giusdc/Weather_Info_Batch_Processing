@@ -18,22 +18,17 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Query3 {
-    public static void getResponse(SparkSession spark, String pathFile, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities,String format) throws IOException {
+    public static void getResponse(SparkSession spark, String pathFile, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities,String format,String[] citiesList) throws IOException {
 
         //Get temperature values
 
         long startQueryTime = System.currentTimeMillis();
 
         Dataset<Row> fileRow = spark.read().format(format).load(pathFile);
-        Row header=fileRow.first();
-        String[] citiesList=new String[header.length()-1];
-        for(int x=1;x<header.length();x++){
-            citiesList[x-1]=header.get(x).toString();
-        }
         JavaRDD<Row> tempRDD = fileRow.toJavaRDD();
 
 
-        JavaPairRDD<String,Float> tempInfoRDD=tempRDD.filter(x->FileInfoParser.check(x,header))
+        JavaPairRDD<String,Float> tempInfoRDD=tempRDD.filter(x->FileInfoParser.check(x))
                 .flatMapToPair(line-> FileInfoParser.parse(line,citiesList,hmapCities,zoneIdList,0,true))
                 .filter(x->(x._1().split("_")[2].equals("S") || x._1().split("_")[2].equals("W")) &&
                         (x._1().split("_")[3].split("-")[0].equals("2017") ||  x._1().split("_")[3].split("-")[0].equals("2016")));

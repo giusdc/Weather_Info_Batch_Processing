@@ -25,13 +25,14 @@ public class CityParser {
 
     public static CityInfo parse(Row line) throws IOException {
 
+
         return new CityInfo(line.get(0).toString(), line.get(1).toString(), line.get(2).toString());
     }
 
-    public static boolean check(Row x, Row header) {
+    public static boolean check(Row x) {
 
         if (!x.anyNull())
-            return !x.equals(header) && !(x.get(0).toString().matches(".*\\d.*")) && check_coordinate(x.get(1).toString(), x.get(2).toString());
+            return  !(x.get(0).toString().matches(".*\\d.*")) && check_coordinate(x.get(1).toString(), x.get(2).toString());
         return false;
 
 
