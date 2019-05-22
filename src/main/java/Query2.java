@@ -52,7 +52,7 @@ public class Query2 {
             System.out.println("Execution time in seconds: " + timeElapsed / 1000);
 
 
-            HBaseUtils.execute("/user/query2/"+i+"/part-00000",2,i,Main.hdfs_uri);
+            //HBaseUtils.execute("/user/query2/"+i+"/part-00000",2,i,Main.hdfs_uri);
 
 
         }

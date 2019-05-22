@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 public class Main {
 
-    public static String hdfs_uri = "hdfs://18.197.148.35:8020";
+    public static String hdfs_uri = "hdfs://35.157.71.200:8020";
 
     //private static String[] pathListCsv = {"data/temperature.csv", "data/pressure.csv", "data/humidity.csv", "data/city_attributes.csv", "data/weather_description.csv"};
     //private static String[] pathListAvro = {"avro/temperature.avro", "avro/pressure.avro", "avro/humidity.avro", "avro/cityAttributes.avro", "avro/weather_description.avro"};
@@ -56,18 +56,18 @@ public class Main {
         startTime = System.currentTimeMillis();
 
         SparkConf conf = new SparkConf()
-                .setMaster("local")
+                //.setMaster("local")
                 .setAppName("Query");
 
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         Configuration hadoopconf = sc.hadoopConfiguration();
-        hadoopconf.addResource(new Path("/etc/hadoop/conf/core-site.xml"));
-        hadoopconf.addResource(new Path("/etc/hadoop/conf/hdfs-site.xml"));
-        /*hadoopconf.set("fs.defaultFS", hdfs_uri);
-       // hadoopconf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        //hadoopconf.addResource(new Path("/etc/hadoop/conf/core-site.xml"));
+        //hadoopconf.addResource(new Path("/etc/hadoop/conf/hdfs-site.xml"));
+        hadoopconf.set("fs.defaultFS", hdfs_uri);
+        hadoopconf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         hadoopconf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-        hadoopconf.set("dfs.permissions", "false");*/
+        hadoopconf.set("dfs.permissions", "false");
 
 
         sc.setLogLevel("ERROR");
@@ -101,7 +101,7 @@ public class Main {
                     break;
 
                 case 2:
-                    inputCity = spark.read().format("parquet").load(pathListAvro[3]);
+                    inputCity = spark.read().format("parquet").load(pathListParquet[3]);
                     format="parquet";
                     path = pathListParquet;
                     break;
@@ -155,6 +155,7 @@ public class Main {
                     break;
 
             }
+            spark.stop();
             sc.stop();
 
         }

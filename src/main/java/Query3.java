@@ -46,7 +46,7 @@ public class Query3 {
         System.out.println("Execution time in seconds: " + timeElapsed / 1000);
 
 
-        HBaseUtils.execute("/user/query3/part-00000",3,-1,Main.hdfs_uri);
+      //  HBaseUtils.execute("/user/query3/part-00000",3,-1,Main.hdfs_uri);
 
 
     }

@@ -40,7 +40,7 @@ public class Query1 {
         long timeElapsed = endTime - Main.startTime;
         System.out.println("Execution time in seconds: " + timeElapsed / 1000);
 
-        HBaseUtils.execute("/user/query1/part-00000",1,-1,Main.hdfs_uri);
+        //HBaseUtils.execute("/user/query1/part-00000",1,-1,Main.hdfs_uri);
 
 
     }
