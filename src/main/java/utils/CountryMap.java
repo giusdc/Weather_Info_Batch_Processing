@@ -14,8 +14,8 @@ public class CountryMap {
 
     // Get country for each city
     public static String sendGet(Row line) throws Exception {
-        CityInfo city= CityParser.parse(line);
-        String url="https://nominatim.openstreetmap.org/reverse?format=json&lat="+city.getLatitude()+"&lon="+city.getLongitude()+"&accept-language=en";
+        CityInfo city = CityParser.parse(line);
+        String url = "https://nominatim.openstreetmap.org/reverse?format=json&lat=" + city.getLatitude() + "&lon=" + city.getLongitude() + "&accept-language=en";
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setRequestMethod("GET");
@@ -31,9 +31,9 @@ public class CountryMap {
             response.append(inputLine);
         }
         //Parsing response
-        JsonObject jsonObject= (JsonObject) new JsonParser().parse(String.valueOf(response));
-        JsonObject address= (JsonObject) jsonObject.get("address");
-        String country= String.valueOf(address.get("country"));
+        JsonObject jsonObject = (JsonObject) new JsonParser().parse(String.valueOf(response));
+        JsonObject address = (JsonObject) jsonObject.get("address");
+        String country = String.valueOf(address.get("country"));
         in.close();
         return country;
 

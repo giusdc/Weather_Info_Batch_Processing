@@ -20,16 +20,15 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Query3 {
-    public static void getResponse(SparkSession spark, String pathFile, List<ZoneId> zoneIdList, HashMap<String, String> hmapCities, String format, String[] citiesList, FSDataOutputStream writer,int indexCicle) throws IOException {
+    public static void getResponse(SparkSession spark, String pathFile, List<ZoneId> zoneIdList, HashMap<String, String> hmapCities, String format, String[] citiesList,int indexCicle) throws IOException {
 
-        //Get temperature values
-
+        //starting processing time
         long startQueryTime = System.currentTimeMillis();
 
         Dataset<Row> fileRow = spark.read().format(format).load(pathFile);
         JavaRDD<Row> tempRDD = fileRow.toJavaRDD();
 
-
+        //RDD transformations
         JavaPairRDD<String,Float> tempInfoRDD=tempRDD.filter(x->FileInfoParser.checkDate(x))
                 .flatMapToPair(line-> FileInfoParser.parse(line,citiesList,hmapCities,zoneIdList,0,true))
                 .filter(x->(x._1().split("_")[2].equals("S") || x._1().split("_")[2].equals("W")) &&
@@ -37,17 +36,18 @@ public class Query3 {
 
         JavaPairRDD<String, String> output = compute(tempInfoRDD);
         output.saveAsTextFile(Main.hdfs_uri+"/user/query3");
-       // output.saveAsTextFile("query3");
+
+        //stopping processing time
         TimeUtils.calculateTime(startQueryTime,System.currentTimeMillis(),3);
+
+        //deleting old outputs (needed only for re-execute this code many times for metrics computations)
         if(indexCicle!=4)
             Main.fs.delete(new Path(Main.hdfs_uri+"/user/query3"),true);
-
-
-
-
     }
 
     public static JavaPairRDD<String,String> compute(JavaPairRDD<String,Float> tempInfoRDD){
+
+
         JavaPairRDD<String, Stats> avgRDD = tempInfoRDD.aggregateByKey((new Stats(0,0)),
                 (v,x) -> new Stats(v.getSum()+x,v.getNum()+1),
                 (v1,v2) -> new Stats(v1.getSum()+v2.getSum(),v1.getNum()+v2.getNum()));
@@ -68,21 +68,22 @@ public class Query3 {
 
     }
 
-    public static void getResponse(JavaRDD<Row> tempRDD, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities,String[] cities,BufferedWriter writer,int indexCicle) throws IOException {
+
+    public static void getResponseFull(JavaRDD<Row> tempRDD, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities,String[] cities,int indexCicle) throws IOException {
 
         long startQueryTime = System.currentTimeMillis();
 
         JavaPairRDD<String, Float> tempInfoRDD = tempRDD.flatMapToPair(line -> FileInfoParser.parse(line, cities, hmapCities, zoneIdList, 0, true)).sortByKey()
-        .filter(x -> (x._1().split("_")[2].equals("S") || x._1().split("_")[2].equals("W")) &&
+                .filter(x -> (x._1().split("_")[2].equals("S") || x._1().split("_")[2].equals("W")) &&
                         (x._1().split("_")[3].split("-")[0].equals("2017") || x._1().split("_")[3].split("-")[0].equals("2016")));
         JavaPairRDD<String, String> output = compute(tempInfoRDD);
 
         output.saveAsTextFile(Main.hdfs_uri+"/user/query3");
-        //output.saveAsTextFile("query3");
         TimeUtils.calculateTime(startQueryTime,System.currentTimeMillis(),3);
         if(indexCicle!=4)
             Main.fs.delete(new Path(Main.hdfs_uri+"/user/query1"),true);
 
 
     }
+
 }

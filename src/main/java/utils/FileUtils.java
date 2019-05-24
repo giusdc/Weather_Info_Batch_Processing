@@ -22,8 +22,6 @@ public class FileUtils {
     private static float MIN;
     private static float MAX;
 
-
-
     public static boolean check(Row x) {
 
         return checkDate(x);

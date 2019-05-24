@@ -56,7 +56,7 @@ public class Stats implements Serializable {
         return String.valueOf(this.getAvg()) + "," + String.valueOf(this.getVar()) + "," + String.valueOf(this.getMin()) + "," + String.valueOf(this.getMax());
     }
 
-    public String computeRank(String key,List<Tuple2<String, Stats>> rank2016) {
+    public String computeRank(String key, List<Tuple2<String, Stats>> rank2016) {
 
 
         String[] rankArray = this.rank.toArray(new String[0]);
@@ -67,11 +67,11 @@ public class Stats implements Serializable {
         for (int x = 0; x < rankArray.length; x++) {
             hashMap2017.put(Double.parseDouble(rankArray[x].split("_")[0]), rankArray[x].split("_")[1]);
         }
-        Tuple2<String, Stats> rankCity=null;
-        for(int x=0;x<rank2016.size();x++){
+        Tuple2<String, Stats> rankCity = null;
+        for (int x = 0; x < rank2016.size(); x++) {
             Tuple2<String, Stats> rankToCheck = rank2016.get(x);
-            if(rankToCheck._1().split("_")[0].equals(key.split("_")[0])){
-                rankCity= rankToCheck;
+            if (rankToCheck._1().split("_")[0].equals(key.split("_")[0])) {
+                rankCity = rankToCheck;
             }
 
         }
@@ -79,8 +79,6 @@ public class Stats implements Serializable {
         for (int x = 0; x < rankArray.length; x++) {
             hashMap2016.put(Double.parseDouble(rankCity2016[x].split("_")[0]), rankCity2016[x].split("_")[1]);
         }
-
-
 
 
         TreeMap map2016 = new TreeMap<>(Collections.reverseOrder());
@@ -91,9 +89,9 @@ public class Stats implements Serializable {
         List<String> cities2017 = new ArrayList<>(map2017.values());
         String result = "";
 
-        for (int i = 0; i <cities2017.size(); i++) {
+        for (int i = 0; i < cities2017.size(); i++) {
 
-            result += cities2017.get(i)+"_"+String.valueOf(cities2016.indexOf(cities2017.get(i))+1)+",";
+            result += cities2017.get(i) + "_" + String.valueOf(cities2016.indexOf(cities2017.get(i)) + 1) + ",";
             if (i == 2)
                 return result;
         }

@@ -1,4 +1,5 @@
 package utils;
+
 import java.io.Serializable;
 
 public class CityInfo implements Serializable {
@@ -17,9 +18,11 @@ public class CityInfo implements Serializable {
     public String getCity() {
         return city;
     }
+
     public String getLatitude() {
         return latitude;
     }
+
     public String getLongitude() {
         return longitude;
     }

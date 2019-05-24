@@ -16,30 +16,6 @@ public class TimeUtils {
     private static ArrayList<Long> finaltime=new ArrayList<Long>();
     private static ArrayList<Float> mean=new ArrayList<Float>();
 
-    public static ArrayList<Long> getCitytime() {
-        return citytime;
-    }
-
-    public static ArrayList<Long> getQuery1time() {
-        return query1time;
-    }
-
-    public static ArrayList<Long> getQuery2time() {
-        return query2time;
-    }
-
-    public static ArrayList<Long> getQuery3time() {
-        return query3time;
-    }
-
-    public static ArrayList<Long> getQuery2sql() {
-        return query2sql;
-    }
-
-    public static ArrayList<Long> getFinaltime() {
-        return finaltime;
-    }
-
     public static void calculateTime(long startTime, long endTime, int index){
         long diff=(endTime - startTime)/1000;
         switch (index){
@@ -66,7 +42,7 @@ public class TimeUtils {
         }
 
     }
-
+    //compute avg
     private static float mean(List<Long> list){
         long sum = 0;
         for(long time: list ){
@@ -77,6 +53,7 @@ public class TimeUtils {
         return temp;
     }
 
+    //write data on metrics file
     public static void compute(FSDataOutputStream writer) throws IOException {
         writer.writeBytes("Query city mean time(s): "+mean(citytime)+"\n");
         writer.writeBytes("Query 1 mean time(s): "+mean(query1time)+"\n");
@@ -93,7 +70,7 @@ public class TimeUtils {
         writer.writeBytes("Query 2 sql dev time(s): "+dev(5,query2sql)+"\n");
 
     }
-
+    //compute standard deviation
     private static float dev(int i, ArrayList<Long> arrayList) {
         double sum=0;
         for(long x:arrayList){
