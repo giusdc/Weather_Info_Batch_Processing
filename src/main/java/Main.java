@@ -156,7 +156,7 @@ public class Main {
                     /*Query2 in SparkSQL processing*/
                     for (int x = 0; x < path.length - 2; x++) {
                         JavaRDD<FileInfo> filemapRDD = FileUtils.mapper(sc, spark, path[x], zoneIdList, hmapCities, format, citiesName, x);
-                        Query2.processSQL(spark, filemapRDD, x);
+                        Query2.processSQL(spark, filemapRDD, i);
                     }
 
                 default:
