@@ -73,6 +73,7 @@ public class Query2 {
                 "GROUP BY country, timestamp");
 
         result.toJavaRDD().saveAsTextFile(Main.hdfs_uri + "/user/query2sql_" + indexCicle);
+        TimeUtils.calculateTime(Main.startSQLTime, System.currentTimeMillis(), 4);
         if (indexCicle != 4)
             Main.fs.delete(new Path(Main.hdfs_uri + "/user/query2sql_" + indexCicle), true);
 

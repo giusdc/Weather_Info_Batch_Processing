@@ -154,11 +154,11 @@ public class Main {
                 case 5:
                     startSQLTime = System.currentTimeMillis();
                     /*Query2 in SparkSQL processing*/
-                    for (int x = 0; x < path.length - 2; i++) {
+                    for (int x = 0; x < path.length - 2; x++) {
                         JavaRDD<FileInfo> filemapRDD = FileUtils.mapper(sc, spark, path[x], zoneIdList, hmapCities, format, citiesName, x);
-                        Query2.processSQL(spark, filemapRDD, i);
+                        Query2.processSQL(spark, filemapRDD, x);
                     }
-                    TimeUtils.calculateTime(startSQLTime, System.currentTimeMillis(), 4);
+
                 default:
                     break;
 
