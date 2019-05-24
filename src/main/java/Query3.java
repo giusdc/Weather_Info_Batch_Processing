@@ -81,7 +81,7 @@ public class Query3 {
         output.saveAsTextFile(Main.hdfs_uri+"/user/query3");
         TimeUtils.calculateTime(startQueryTime,System.currentTimeMillis(),3);
         if(indexCicle!=4)
-            Main.fs.delete(new Path(Main.hdfs_uri+"/user/query1"),true);
+            Main.fs.delete(new Path(Main.hdfs_uri+"/user/query3"),true);
 
 
     }
