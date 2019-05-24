@@ -1,41 +1,47 @@
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import scala.Tuple2;
 import utils.*;
 
+import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class Query2 {
 
 
-    public static JavaRDD<Row> getResponse(SparkSession spark, String[] pathList, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities, String format,String[] citiesList) throws ParseException, IOException {
+    public static JavaRDD<Row> getResponse(SparkSession spark, String[] pathList, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities, String format, String[] citiesList, FSDataOutputStream writer,int indexCicle) throws IOException {
 
-        JavaRDD<Row> filterRDD,prova=null;
-        String cities[]=null;
+        long startQueryTime = System.currentTimeMillis();
+        JavaRDD<Row> filterRDD,temp=null;
 
         //Get temperature values
         for(int i=0;i<pathList.length-2;i++){
             int index=i;
             Dataset<Row> fileRow = spark.read().format(format).load(pathList[i]);
             JavaRDD<Row> fileRDD = fileRow.toJavaRDD();
+            filterRDD = fileRDD.filter(x->FileInfoParser.checkDate(x));
+            //Caching temperatureRDD
+            if(index==0)
+            {
+                temp=filterRDD;
 
-            filterRDD = fileRDD.filter(x->FileInfoParser.check(x)).cache();
-
-            if(index==0){
-                 prova = fileRDD.filter(x -> FileInfoParser.check(x)).cache();
-                //tempRDD=filterRDD;
             }
 
             JavaPairRDD<String, Float> fileInfoRDD = filterRDD.flatMapToPair(line -> FileInfoParser.parse(line, citiesList, hmapCities, zoneIdList, index, false)).sortByKey().cache();
-
-            //tempInfoRDD.saveAsTextFile("ciao");
 
             JavaPairRDD<String, Stats> avgRDD = fileInfoRDD.aggregateByKey((new Stats(0,0,0,Double.POSITIVE_INFINITY,Double.NEGATIVE_INFINITY)),
                     (v,x) -> new Stats(v.getSum()+x,v.getNum()+1,v.getSumSquare()+Math.pow(x,2),v.computeMin(x),v.computeMax(x)),
@@ -43,21 +49,67 @@ public class Query2 {
 
             JavaPairRDD<String,String> AvgResult = avgRDD.mapToPair( p->new Tuple2<>(p._1(), p._2().getValues())).sortByKey();
             //TODO
-            AvgResult.saveAsTextFile(Main.hdfs_uri+"/user/query2/"+i);
+            AvgResult.saveAsTextFile(Main.hdfs_uri+"/user/query2_"+i);
+            //AvgResult.saveAsTextFile("query2"+i);
 
-
-
-            long endTime = System.currentTimeMillis();
-            long timeElapsed = endTime - Main.startTime;
-            System.out.println("Execution time in seconds: " + timeElapsed / 1000);
 
 
             //HBaseUtils.execute("/user/query2/"+i+"/part-00000",2,i,Main.hdfs_uri);
 
 
         }
-        FileInfoParser.Result result=new FileInfoParser.Result(prova,cities);
-        return prova;
+        TimeUtils.calculateTime(startQueryTime,System.currentTimeMillis(),2);
+        if(indexCicle!=4){
+            for(int i=0;i<pathList.length-2;i++){
+                Main.fs.delete(new Path(Main.hdfs_uri+"/user/query2_"+i),true);
+            }
+        }
+
+        return temp;
+
     }
 
+    public static void processSQL(SparkSession spark,JavaRDD<FileInfo> values,int indexCicle) throws IOException {
+
+        Dataset<Row> df = createSchemaFromPreprocessedData(spark, values);
+        // Register the DataFrame as a SQL temporary view
+        df.createOrReplaceTempView("query2");
+        Dataset<Row> result = spark.sql("SELECT DISTINCT country,timestamp,AVG(value),STD(value),MIN(value),MAX(value) FROM query2  " +
+                "GROUP BY country, timestamp");
+
+
+        //result.toJavaRDD().saveAsTextFile("sparksql");
+        result.toJavaRDD().saveAsTextFile(Main.hdfs_uri+"/user/query2sql_"+indexCicle);
+        if(indexCicle!=4)
+            Main.fs.delete(new Path(Main.hdfs_uri+"/user/query2sql_"+indexCicle),true);
+
+
+
+
+    }
+
+    private static Dataset<Row> createSchemaFromPreprocessedData(SparkSession spark,
+                                                                 JavaRDD<FileInfo> values){
+
+        // Generate the schema based on the string of schema
+        List<StructField> fields = new ArrayList<>();
+        fields.add(DataTypes.createStructField("timestamp",          DataTypes.StringType, true));
+        fields.add(DataTypes.createStructField("country",     DataTypes.StringType, true));
+        fields.add(DataTypes.createStructField("value",         DataTypes.FloatType, true));
+        StructType schema = DataTypes.createStructType(fields);
+
+        // Convert records of the RDD to Rows
+        JavaRDD<Row> rowRDD = values.map(new Function<FileInfo, Row>() {
+            @Override
+            public Row call( FileInfo val) throws Exception {
+                return RowFactory.create(val.getDate(), val.getCountry(), val.getValue());
+            }
+        });
+
+        // Apply the schema to the RDD
+        Dataset<Row> df = spark.createDataFrame(rowRDD, schema);
+
+        return df;
+
+    }
 }

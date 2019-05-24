@@ -1,24 +1,26 @@
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import scala.Tuple2;
 import utils.FileInfoParser;
-import utils.HBaseUtils;
 import utils.Stats;
+import utils.TimeUtils;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 public class Query3 {
-    public static void getResponse(SparkSession spark, String pathFile, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities,String format,String[] citiesList) throws IOException {
+    public static void getResponse(SparkSession spark, String pathFile, List<ZoneId> zoneIdList, HashMap<String, String> hmapCities, String format, String[] citiesList, FSDataOutputStream writer,int indexCicle) throws IOException {
 
         //Get temperature values
 
@@ -28,25 +30,19 @@ public class Query3 {
         JavaRDD<Row> tempRDD = fileRow.toJavaRDD();
 
 
-        JavaPairRDD<String,Float> tempInfoRDD=tempRDD.filter(x->FileInfoParser.check(x))
+        JavaPairRDD<String,Float> tempInfoRDD=tempRDD.filter(x->FileInfoParser.checkDate(x))
                 .flatMapToPair(line-> FileInfoParser.parse(line,citiesList,hmapCities,zoneIdList,0,true))
                 .filter(x->(x._1().split("_")[2].equals("S") || x._1().split("_")[2].equals("W")) &&
                         (x._1().split("_")[3].split("-")[0].equals("2017") ||  x._1().split("_")[3].split("-")[0].equals("2016")));
 
         JavaPairRDD<String, String> output = compute(tempInfoRDD);
         output.saveAsTextFile(Main.hdfs_uri+"/user/query3");
+       // output.saveAsTextFile("query3");
+        TimeUtils.calculateTime(startQueryTime,System.currentTimeMillis(),3);
+        if(indexCicle!=4)
+            Main.fs.delete(new Path(Main.hdfs_uri+"/user/query3"),true);
 
 
-        long endProcessTime = System.currentTimeMillis();
-        long processTimeElapsed = endProcessTime - startQueryTime;
-        System.out.println("Processing query time: "+processTimeElapsed/1000);
-
-        long endTime = System.currentTimeMillis();
-        long timeElapsed = endTime - Main.startTime;
-        System.out.println("Execution time in seconds: " + timeElapsed / 1000);
-
-
-      //  HBaseUtils.execute("/user/query3/part-00000",3,-1,Main.hdfs_uri);
 
 
     }
@@ -72,27 +68,20 @@ public class Query3 {
 
     }
 
-    public static void getResponse(JavaRDD<Row> tempRDD, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities) {
+    public static void getResponse(JavaRDD<Row> tempRDD, List<ZoneId> zoneIdList, HashMap<String,String> hmapCities,String[] cities,BufferedWriter writer,int indexCicle) throws IOException {
 
         long startQueryTime = System.currentTimeMillis();
 
-        JavaPairRDD<String, Float> tempInfoRDD = tempRDD.flatMapToPair(line -> FileInfoParser.parse(line, FileInfoParser.Result.getCities(), hmapCities, zoneIdList, 0, true))
-                .filter(x -> (x._1().split("_")[2].equals("S") || x._1().split("_")[2].equals("W")) &&
+        JavaPairRDD<String, Float> tempInfoRDD = tempRDD.flatMapToPair(line -> FileInfoParser.parse(line, cities, hmapCities, zoneIdList, 0, true)).sortByKey()
+        .filter(x -> (x._1().split("_")[2].equals("S") || x._1().split("_")[2].equals("W")) &&
                         (x._1().split("_")[3].split("-")[0].equals("2017") || x._1().split("_")[3].split("-")[0].equals("2016")));
         JavaPairRDD<String, String> output = compute(tempInfoRDD);
 
-        //output.saveAsTextFile(Main.hdfs_uri+"/user/query3");
-        output.saveAsTextFile("query3cache");
-
-        long endProcessTime = System.currentTimeMillis();
-        long processTimeElapsed = endProcessTime - startQueryTime;
-        System.out.println("Processing query time: "+processTimeElapsed/1000);
-
-        long endTime = System.currentTimeMillis();
-        long timeElapsed = endTime - Main.startTime;
-        System.out.println("Execution time in seconds: " + timeElapsed / 1000);
-
-        //HBaseUtils.execute("/user/query3/part-00000",3,-1,Main.hdfs_uri);
+        output.saveAsTextFile(Main.hdfs_uri+"/user/query3");
+        //output.saveAsTextFile("query3");
+        TimeUtils.calculateTime(startQueryTime,System.currentTimeMillis(),3);
+        if(indexCicle!=4)
+            Main.fs.delete(new Path(Main.hdfs_uri+"/user/query1"),true);
 
 
     }

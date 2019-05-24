@@ -1,7 +1,4 @@
 package utils;
-
-import com.esotericsoftware.kryo.Kryo;
-
 import java.io.Serializable;
 
 public class CityInfo implements Serializable {
@@ -9,9 +6,6 @@ public class CityInfo implements Serializable {
     private String city;
     private String latitude;
     private String longitude;
-
-
-
 
     public CityInfo(String city, String latitude, String longitude) {
         this.city = city;
@@ -23,24 +17,10 @@ public class CityInfo implements Serializable {
     public String getCity() {
         return city;
     }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
     public String getLatitude() {
         return latitude;
     }
-
-    public void setLatitude(String latitude) {
-        this.latitude = latitude;
-    }
-
     public String getLongitude() {
         return longitude;
-    }
-
-    public void setLongitude(String longitude) {
-        this.longitude = longitude;
     }
 }

@@ -5,6 +5,8 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.FsInput;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.spark.SparkConf;
@@ -18,7 +20,10 @@ import org.apache.spark.sql.SparkSession;
 import scala.Tuple2;
 import utils.*;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.net.URI;
 import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
@@ -28,9 +33,9 @@ import java.util.regex.Pattern;
 
 public class Main {
 
-    public static String hdfs_uri = "hdfs://35.157.71.200:8020";
+    public static String hdfs_uri = "hdfs://18.197.150.4:8020";
 
-    //private static String[] pathListCsv = {"data/temperature.csv", "data/pressure.csv", "data/humidity.csv", "data/city_attributes.csv", "data/weather_description.csv"};
+    //private static String[] pathListCsv = {"data/temperature.csv","data/pressure.csv","data/humidity.csv", "data/city_attributes.csv", "data/weather_description.csv"};
     //private static String[] pathListAvro = {"avro/temperature.avro", "avro/pressure.avro", "avro/humidity.avro", "avro/cityAttributes.avro", "avro/weather_description.avro"};
 
     private static String[] pathListCsv = {hdfs_uri + "/user/hdfs/temperature.csv", hdfs_uri + "/user/hdfs/pressure.csv", hdfs_uri + "/user/hdfs/humidity.csv", hdfs_uri + "/user/hdfs/city_attributes.csv", hdfs_uri + "/user/hdfs/weather_description.csv"};
@@ -39,27 +44,28 @@ public class Main {
 
     //private static String pathAvro="avro/cityAttributes.avro";
     public static long startTime;
+    public static long startSQLTime;
     public static int typeFile; //0 for csv,1 for avro,2 for parquet
+    public static FileSystem fs;
+    public static Path pathMetrics;
 
 
     public static void main(String[] args) throws Exception {
 
         int query = Integer.parseInt(args[0]);
         typeFile = Integer.parseInt(args[1]);
-
-        //CsvToAvroConverter.converter(pathListCsv, pathToCityFile);
-
-        //UTCUtils.read();
-        //HDFSUtils.init(pathListCsv);
-
         //starting timer
-        startTime = System.currentTimeMillis();
 
+
+        //Set spark context
         SparkConf conf = new SparkConf()
-                //.setMaster("local")
+               /* .setMaster("local")*/
                 .setAppName("Query");
-
         JavaSparkContext sc = new JavaSparkContext(conf);
+        sc.setLogLevel("ERROR");
+        SparkSession spark = SparkSession.builder()
+                .appName("App")
+                .getOrCreate();
 
         Configuration hadoopconf = sc.hadoopConfiguration();
         //hadoopconf.addResource(new Path("/etc/hadoop/conf/core-site.xml"));
@@ -68,18 +74,17 @@ public class Main {
         hadoopconf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         hadoopconf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
         hadoopconf.set("dfs.permissions", "false");
+        /*File metricsFile=new File("/home/hadoop/metrics.txt");
+        BufferedWriter writer=new BufferedWriter(new FileWriter(metricsFile,true));*/
+         fs = FileSystem.get(URI.create(hdfs_uri), hadoopconf);
+        pathMetrics=new Path(hdfs_uri+"/metrics");
+        FSDataOutputStream outputStream = fs.create(pathMetrics);
+        for(int i=0;i<5;i++){
 
 
-        sc.setLogLevel("ERROR");
-
-        SparkSession spark = SparkSession.builder()
-                .appName("App")
-                .getOrCreate();
+        startTime = System.currentTimeMillis();
+        //Set format and path in function of the file's format
         Dataset<Row> inputCity=null;
-
-
-
-        //Get mapping city->country
         if (true) {
             String[] path=null;
             String format="";
@@ -90,11 +95,6 @@ public class Main {
                     path= pathListCsv;
                     break;
                 case 1:
-                    DatumReader<GenericRecord> datumReader= new GenericDatumReader<>();
-                    Path path1= new Path(pathListAvro[3]);
-                    SeekableInput input= new FsInput(path1,hadoopconf);
-                    DataFileReader<GenericRecord> dataFileReader= new DataFileReader<GenericRecord>(input,datumReader);
-                    System.out.println("schema"+dataFileReader.getSchema().getFields().get(0));
                     inputCity = spark.read().format("avro").load(pathListAvro[3]);
                     format="avro";
                     path = pathListAvro;
@@ -106,60 +106,76 @@ public class Main {
                     path = pathListParquet;
                     break;
             }
-
+            //Get cities info
             JavaRDD<Row> city_info = inputCity.toJavaRDD();
-
-            Row header=city_info.first();
-            JavaPairRDD<String, String> cityCountryMapRDD = city_info.filter(x->CityParser.check(x)).mapToPair(c -> new Tuple2<>(CityParser.parse(c).getCity(), CountryMap.sendGet(c))).cache();
-            JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> CityParser.check(y)).mapToPair(c -> new Tuple2<>(CityParser.parse(c).getCity(), new Float[]{Float.parseFloat(CityParser.parse(c).getLatitude()), Float.parseFloat(CityParser.parse(c).getLongitude())}));
-
+            //Mapping city/country
+            JavaPairRDD<String, String> cityCountryMapRDD = city_info.filter(x->CityParser.check(x))
+                    .mapToPair(c -> new Tuple2<>(CityParser.parse(c).getCity(), CountryMap.sendGet(c)));
             Map<String, String> map = cityCountryMapRDD.collectAsMap();
-            HashMap<String, String> hmapCities = new HashMap<String, String>(map);
+            HashMap<String, String> hmapCities = new HashMap<>(map);
+
+            //Get cities'coordinates
+            JavaPairRDD<String, Float[]> cityCoordinateRDD = city_info.filter(y -> CityParser.check(y))
+                    .mapToPair(c -> new Tuple2<>(CityParser.parse(c).getCity(), new Float[]{Float.parseFloat(CityParser.parse(c).getLatitude()), Float.parseFloat(CityParser.parse(c).getLongitude())}));
+
             List<Float[]> values = cityCoordinateRDD.values().collect();
             List<String> cityList = cityCoordinateRDD.keys().collect();
             String[] citiesName = cityList.toArray(new String[cityList.size()]);
-
 
             //Get mapping pair zoneId/cities
             List<Tuple2<String, ZoneId>> mapping = UTCUtils.getZoneId(values, citiesName);
             JavaRDD rdd = sc.parallelize(mapping);
             JavaPairRDD<String, ZoneId> mappingPair = JavaPairRDD.fromJavaRDD(rdd);
-            // mappingPair.saveAsTextFile("hdfs://3.122.52.163:8020/user/prova");
             List<ZoneId> zoneIdList = mappingPair.values().collect();
-
-            FileInfoParser.Result result=null;
-            JavaRDD<Row> row=null;
-
-
+            TimeUtils.calculateTime(Main.startTime,System.currentTimeMillis(),0);
+            JavaRDD<Row> tempRDD=null;
+            //Execute query
             switch (query) {
                 case 1:
                     /*  Process Query 1 */
-                    Query1.getResponse(spark, path[4], zoneIdList,format,citiesName);
+                    Query1.getResponse(spark, path[4], zoneIdList,format,citiesName,outputStream,i);
                     break;
 
                 case 2:
                     /*  Process Query 2 */
-                    Query2.getResponse(spark, path, zoneIdList, hmapCities, format,citiesName);
+                    Query2.getResponse(spark, path, zoneIdList, hmapCities, format,citiesName,outputStream,i);
                     break;
 
                 case 3:
                     /*  Process Query 3 */
-                    Query3.getResponse(spark, path[0], zoneIdList, hmapCities,format,citiesName);
+                    Query3.getResponse(spark, path[0], zoneIdList, hmapCities,format,citiesName,outputStream,i);
                     break;
                 case 4:
-                    Query1.getResponse(spark, path[4], zoneIdList,format,citiesName);
-                    row=Query2.getResponse(spark, path, zoneIdList, hmapCities,format,citiesName);
-                    Query3.getResponse(spark, path[0], zoneIdList, hmapCities,format,citiesName);
-                    //Query3.getResponse(row,zoneIdList,hmapCities);
+                    /*Process all query*/
+                    Query1.getResponse(spark, path[4], zoneIdList,format,citiesName,outputStream,i);
+                    /*  Process Query 2 */
+                    tempRDD=Query2.getResponse(spark, path, zoneIdList, hmapCities, format,citiesName,outputStream,i);
+                    tempRDD.cache();
+                    Query3.getResponse(spark, path[0], zoneIdList, hmapCities,format,citiesName,outputStream,i);
+                    //Query3.getResponse(tempRDD,zoneIdList,hmapCities,citiesName);
+                    break;
+                case 5:
+                    startSQLTime=System.currentTimeMillis();
+                    /*SparkSQL processing*/
+                    for(int x=0;x<path.length-2;i++){
+                        JavaRDD<FileInfo> filemapRDD = FileUtils.mapper(sc, spark, path[x],zoneIdList, hmapCities, format,citiesName,x);
+                        Query2.processSQL(spark,filemapRDD,i);
+                    }
+                    TimeUtils.calculateTime(startSQLTime,System.currentTimeMillis(),4);
                 default:
                     break;
 
             }
-            spark.stop();
-            sc.stop();
+            TimeUtils.calculateTime(startTime,System.currentTimeMillis(),5);
+
 
         }
 
 
+    }
+        TimeUtils.compute(outputStream);
+        outputStream.close();
+        spark.stop();
+        sc.stop();
     }
 }

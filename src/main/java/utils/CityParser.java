@@ -23,7 +23,7 @@ import java.util.List;
 
 public class CityParser {
 
-    public static CityInfo parse(Row line) throws IOException {
+    public static CityInfo parse(Row line){
 
 
         return new CityInfo(line.get(0).toString(), line.get(1).toString(), line.get(2).toString());
@@ -31,6 +31,7 @@ public class CityParser {
 
     public static boolean check(Row x) {
 
+        //Check if there are any null elements, numeric cities and the coordinate values
         if (!x.anyNull())
             return  !(x.get(0).toString().matches(".*\\d.*")) && check_coordinate(x.get(1).toString(), x.get(2).toString());
         return false;

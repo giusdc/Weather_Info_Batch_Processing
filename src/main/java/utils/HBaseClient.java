@@ -1,6 +1,7 @@
 package  utils;
 import com.google.protobuf.ServiceException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -15,7 +16,7 @@ import java.util.*;
 public class HBaseClient {
 
     /* Configuration Parameters */
-    private static final String ZOOKEEPER_HOST = "18.197.134.128";
+    private static final String ZOOKEEPER_HOST = "localhost";
     private static final String ZOOKEEPER_PORT = "2181";
     private static final String HBASE_MASTER  = "localhost:60000";
     private static final int    HBASE_MAX_VERSIONS = Integer.MAX_VALUE;
@@ -52,6 +53,9 @@ public class HBaseClient {
         conf.set("hbase.zookeeper.quorum", ZOOKEEPER_HOST);
         conf.set("hbase.zookeeper.property.clientPort", ZOOKEEPER_PORT);
         conf.set("hbase.master", HBASE_MASTER);
+      /*  conf.addResource(new Path("/etc/hbase/conf/hbase-site.xml"));
+        conf.addResource(new Path("/etc/hbase/conf/hbase-policy.xml"));
+        conf.addResource(new Path("/etc/hbase/conf/hadoop-metrics2-hbase.properties"));*/
 
 
 
