@@ -64,7 +64,7 @@ public class Query2 {
 
     }
 
-    public static void processSQL(SparkSession spark, JavaRDD<FileInfo> values, int indexCicle) throws IOException {
+    public static void processSQL(SparkSession spark, JavaRDD<FileInfo> values, int indexCicle,int i) throws IOException {
 
         Dataset<Row> df = createSchemaFromPreprocessedData(spark, values);
         // Register the DataFrame as a SQL temporary view
@@ -72,10 +72,10 @@ public class Query2 {
         Dataset<Row> result = spark.sql("SELECT DISTINCT country,timestamp,AVG(value),STD(value),MIN(value),MAX(value) FROM query2  " +
                 "GROUP BY country, timestamp");
 
-        result.toJavaRDD().saveAsTextFile(Main.hdfs_uri + "/user/query2sql_" + indexCicle);
+        result.toJavaRDD().saveAsTextFile(Main.hdfs_uri + "/user/query2sql_" + i);
         TimeUtils.calculateTime(Main.startSQLTime, System.currentTimeMillis(), 4);
         if (indexCicle != 4)
-            Main.fs.delete(new Path(Main.hdfs_uri + "/user/query2sql_" + indexCicle), true);
+            Main.fs.delete(new Path(Main.hdfs_uri + "/user/query2sql_" + i), true);
 
 
     }
