@@ -103,6 +103,7 @@ public class Main {
                     break;
             }
 
+            System.out.println();
             //Get cities info
             JavaRDD<Row> city_info = inputCity.toJavaRDD();
             //Mapping city/country
